@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "app-school-c6e40"
+  },
+  "targets": {
+    "app-school-c6e40": {
+      "hosting": {
+        "prod": [
+          "ekawent"
+        ]
+      }
+    }
+  }
+}

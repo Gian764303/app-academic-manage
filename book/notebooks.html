@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es" data-book-mode="courses-hub">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cursos</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="book.css?v=25" />
+</head>
+
+<body>
+  <div id="book-app" class="book-app hidden">
+
+    <header class="book-header">
+      <div class="book-header-left">
+        <a href="../index.html" class="book-back" title="Dashboard">←</a>
+        <div class="book-title-wrap">
+          <span id="book-emoji" class="book-emoji">📚</span>
+          <div>
+            <h1 id="book-title" class="book-title">Cursos</h1>
+            <p id="book-subtitle" class="book-subtitle">Todos tus cursos y páginas</p>
+          </div>
+        </div>
+      </div>
+      <div class="book-header-right">
+        <span id="book-sync-status" class="book-sync idle">Listo</span>
+      </div>
+    </header>
+
+    <div class="book-body book-body--hub">
+      <aside class="courses-sidebar" id="courses-sidebar" aria-label="Cursos">
+        <div class="book-sidebar-header">
+          <span class="book-sidebar-title">Cursos</span>
+        </div>
+        <nav class="courses-list book-sidebar-list" id="courses-list"></nav>
+      </aside>
+
+      <aside class="book-sidebar" id="book-sidebar" aria-label="Páginas del curso">
+        <div class="book-sidebar-header">
+          <span class="book-sidebar-title">Páginas</span>
+          <button type="button" class="book-sidebar-add" id="book-page-add" title="Nueva página">+</button>
+        </div>
+        <nav class="book-sidebar-list" id="book-pages-list"></nav>
+      </aside>
+
+      <div class="book-content">
+        <div class="headless-toolbar headless-toolbar--combined" id="headless-toolbar-main" aria-label="Barra de formato">
+          <button type="button" class="headless-btn book-sidebar-toggle-btn" id="book-sidebar-toggle" title="Ocultar cursos y páginas" aria-expanded="true">◀</button>
+          <div class="headless-divider"></div>
+          <button type="button" class="headless-btn" data-cmd="undo" title="Deshacer">↩</button>
+          <button type="button" class="headless-btn" data-cmd="redo" title="Rehacer">↪</button>
+          <button type="button" class="headless-btn headless-btn--action" data-cmd="clearFormat" title="Limpiar formato">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 256 256" style="display:inline-block;vertical-align:middle;"><path fill="currentColor" d="M235.5 216.81c-22.56-11-35.5-34.58-35.5-64.8v-17.28a15.94 15.94 0 0 0-10.09-14.87L165 110a8 8 0 0 1-4.48-10.34l21.32-53a28 28 0 0 0-16.1-37a28.14 28.14 0 0 0-35.82 16a.6.6 0 0 0 0 .12L108.9 79a8 8 0 0 1-10.37 4.49L73.11 73.14a15.89 15.89 0 0 0-17.37 3.66C34.68 98.45 24 123.75 24 152a111.45 111.45 0 0 0 31.18 77.53A8 8 0 0 0 61 232h171a8 8 0 0 0 3.5-15.19M67.14 88l25.41 10.3a24 24 0 0 0 31.23-13.45l21-53c2.56-6.11 9.47-9.27 15.43-7a12 12 0 0 1 6.88 15.92l-21.4 52.99a24 24 0 0 0 13.43 31.14l24.88 9.83V153L55.77 101.71A109 109 0 0 1 67.14 88m48 128a87.53 87.53 0 0 1-24.34-42a8 8 0 0 0-15.49 4a105.2 105.2 0 0 0 18.36 38H64.44A95.54 95.54 0 0 1 40 152a85.9 85.9 0 0 1 7.73-36.29l137.8 55.12c3 18 10.56 33.48 21.89 45.16Z"/></svg>
+          </button>
+          <div class="headless-divider"></div>
+          <button type="button" class="headless-btn" data-cmd="bold" title="Negrita">bold</button>
+          <button type="button" class="headless-btn" data-cmd="italic" title="Cursiva">italic</button>
+          <button type="button" class="headless-btn" data-cmd="underline" title="Subrayado">underline</button>
+          <button type="button" class="headless-btn" data-cmd="strike" title="Tachado">strike</button>
+          <button type="button" class="headless-btn" data-cmd="code" title="Código inline">code</button>
+          <div class="headless-divider"></div>
+          <button type="button" class="headless-btn" data-cmd="alignLeft" title="Izquierda">⬅ izq</button>
+          <button type="button" class="headless-btn" data-cmd="alignCenter" title="Centrado">↔ centro</button>
+          <button type="button" class="headless-btn" data-cmd="alignJustify" title="Justificado">☰ justif</button>
+          <div class="headless-divider"></div>
+          <select class="headless-select" id="tb-heading" title="Título">
+            <option value="">Párrafo</option>
+            <option value="1">H1</option>
+            <option value="2">H2</option>
+            <option value="3">H3</option>
+            <option value="4">H4</option>
+            <option value="5">H5</option>
+            <option value="6">H6</option>
+          </select>
+          <div class="headless-divider"></div>
+          <button type="button" class="headless-btn" data-cmd="bulletList" title="Lista viñetas">• lista</button>
+          <button type="button" class="headless-btn" data-cmd="orderedList" title="Lista numerada">1. lista</button>
+          <button type="button" class="headless-btn" data-cmd="blockquote" title="Cita">❝ cita</button>
+          <button type="button" class="headless-btn" data-cmd="codeBlock" title="Bloque de código">&lt;/&gt; bloque</button>
+          <button type="button" class="headless-btn" data-cmd="horizontalRule" title="Separador">— hr</button>
+          <div class="headless-divider"></div>
+          <button type="button" class="headless-btn" data-cmd="insertTable" title="Insertar tabla">⊞ tabla</button>
+          <button type="button" class="headless-btn" data-cmd="addRowAfter" title="Agregar fila">+ fila</button>
+          <button type="button" class="headless-btn" data-cmd="addColumnAfter" title="Agregar columna">+ col</button>
+          <button type="button" class="headless-btn" data-cmd="deleteTable" title="Eliminar tabla">✕ tabla</button>
+          <div class="headless-divider"></div>
+          <button type="button" class="headless-btn" data-cmd="image" title="Insertar imagen">imagen</button>
+          <div class="headless-divider"></div>
+          <select id="tb-font" class="headless-select" title="Familia tipográfica">
+            <option value="">Inter (default)</option>
+            <option value="Arial, Helvetica, sans-serif">Arial</option>
+            <option value="'Times New Roman', Times, serif">Times New Roman</option>
+            <option value="Georgia, serif">Georgia</option>
+            <option value="Merriweather, serif">Merriweather</option>
+            <option value="'Segoe UI', system-ui, sans-serif">Sistema</option>
+            <option value="'Cascadia Code', 'Cascadia Mono', Consolas, monospace">Cascadia Code</option>
+          </select>
+        </div>
+
+        <main class="book-main headless-wrap">
+          <div id="editor" class="book-editor headless-editor"></div>
+        </main>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="book-loading" class="book-loading">
+    <p>Cargando cursos…</p>
+  </div>
+
+  <input id="book-image-input" type="file" accept="image/*" class="hidden" />
+  <div id="slash-menu" class="slash-menu hidden" role="listbox"></div>
+  <div id="book-page-menu" class="book-page-menu-pop hidden" role="menu">
+    <button type="button" data-action="rename" role="menuitem">Renombrar</button>
+    <button type="button" data-action="delete" role="menuitem">Eliminar</button>
+  </div>
+
+  <div id="book-course-menu" class="book-page-menu-pop hidden" role="menu">
+    <button type="button" data-action="rename" role="menuitem">Renombrar</button>
+    <button type="button" data-action="delete" role="menuitem">Eliminar</button>
+  </div>
+
+  <script type="module" src="book.js?v=25"></script>
+</body>
+
+</html>
