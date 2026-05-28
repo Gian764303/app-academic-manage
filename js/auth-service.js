@@ -82,8 +82,29 @@ export function initAuthUI() {
   const authUserEmail = document.getElementById('auth-user-email');
   const authUserPhoto = document.getElementById('auth-user-photo');
   const authMsg = document.getElementById('auth-message');
+  const authModal = document.getElementById('auth-modal');
 
   window.showAuthToast = (text, type) => setAuthMessage(authMsg, text, type);
+
+  function openAuthModal() {
+    authModal?.classList.remove('hidden');
+    hideAuthMessage(authMsg);
+  }
+
+  function closeAuthModal() {
+    authModal?.classList.add('hidden');
+    hideAuthMessage(authMsg);
+  }
+
+  document.getElementById('btn-auth-open')?.addEventListener('click', openAuthModal);
+  document.getElementById('auth-modal-close')?.addEventListener('click', closeAuthModal);
+  document.getElementById('auth-modal-backdrop')?.addEventListener('click', closeAuthModal);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && authModal && !authModal.classList.contains('hidden')) {
+      closeAuthModal();
+    }
+  });
 
   document.getElementById('btn-google-login')?.addEventListener('click', async () => {
     hideAuthMessage(authMsg);
@@ -91,6 +112,7 @@ export function initAuthUI() {
     setLoading(btn, true);
     try {
       await loginWithGoogle();
+      closeAuthModal();
     } catch (err) {
       if (err.code === 'auth/popup-closed-by-user') return;
       setAuthMessage(authMsg, translateAuthError(err), 'error');
@@ -130,6 +152,7 @@ export function initAuthUI() {
       window.saveToCloud = null;
       window.loadFromCloud = null;
       window.resetDashboardSession?.();
+      closeAuthModal();
       authScreen?.classList.remove('hidden');
       dashboardShell?.classList.add('hidden');
       authUserBar?.classList.add('hidden');

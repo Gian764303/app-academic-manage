@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+      background: #111111;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 1rem 1rem 4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .app { padding: 1.5rem 1.5rem 4rem; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .animate-in { animation: fadeIn 0.4s ease both; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      border-radius: 1.5rem;
+      border: 1px solid #27272a;
+      overflow: hidden;
+      animation: fadeIn 0.5s ease both;
+    }
+
+    .hero-banner {
+      width: 100%;
+      height: 14rem;
+      background-size: cover;
+      background-position: center 57%;
+      background-color: #18181b;
+    }
+
+    /* ── CURSOS ── */
+    .panel {
+      background: #181818;
+      border: 1px solid #27272a;
+      border-radius: 1.5rem;
+      padding: 1.5rem;
+      animation: fadeIn 0.5s 0.1s ease both;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .panel-header-left,
+    .panel-header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .panel-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: default;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .btn-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #d4d4d8;
+      width: 2.25rem;
+      height: 2.25rem;
+      padding: 0;
+      line-height: 0;
+    }
+
+    .btn-toggle svg {
+      display: block;
+      flex-shrink: 0;
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+      padding: 0.5rem 1rem;
+    }
+
+    .btn-secondary {
+      background: #27272a;
+      color: #d4d4d8;
+      border: 1px solid #3f3f46;
+      padding: 0.5rem 1rem;
+    }
+
+    .btn-icon {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      color: #d4d4d8;
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (min-width: 640px)  { .courses-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 768px)  { .courses-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (min-width: 1024px) { .courses-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .course-card {
+      background: #232323;
+      border: 1px solid #3f3f46;
+      border-radius: 1rem;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      animation: cardIn 0.4s ease both;
+      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .course-card:hover {
+      border-color: #71717a;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .course-card:nth-child(1) { animation-delay: 0.05s; }
+    .course-card:nth-child(2) { animation-delay: 0.10s; }
+    .course-card:nth-child(3) { animation-delay: 0.15s; }
+    .course-card:nth-child(4) { animation-delay: 0.20s; }
+    .course-card:nth-child(5) { animation-delay: 0.25s; }
+    .course-card:nth-child(6) { animation-delay: 0.30s; }
+    .course-card:nth-child(7) { animation-delay: 0.35s; }
+    .course-card:nth-child(8) { animation-delay: 0.40s; }
+
+    .course-thumb {
+      height: 7rem;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .course-body { padding: 1rem; }
+
+    .course-name {
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.025em;
+      color: #e4e4e7;
+    }
+
+    .card-actions {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      z-index: 10;
+    }
+
+    .course-card:hover .card-actions { opacity: 1; }
+
+    .card-action-btn {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(63, 63, 70, 0.6);
+      color: #d4d4d8;
+      border-radius: 0.5rem;
+      width: 1.75rem;
+      height: 1.75rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    svg { display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div
+        class="hero-banner"
+        style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/v1779927248/przke1wldbqsd17q6baw.gif');"
+        role="img"
+        aria-label="Banner del dashboard"
+      ></div>
+    </div>
+
+    <!-- CURSOS -->
+    <section class="panel">
+      <div class="panel-header">
+        <div class="panel-header-left">
+          <span class="btn btn-toggle" title="Ocultar/mostrar panel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </span>
+          <h2 class="panel-title">Cursos</h2>
+        </div>
+        <div class="panel-header-right">
+          <span class="btn btn-primary">+ Nuevo</span>
+          <span class="btn btn-secondary">Ver cursos</span>
+          <span class="btn btn-icon" title="Todos los cursos">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              <path d="M8 7h8"/>
+              <path d="M8 11h6"/>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="courses-grid">
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/nphwhlu3jdydnjq0bb87'); background-color: #ef4444;"></div>
+          <div class="course-body">
+            <h3 class="course-name">📚 MATEMATICA - A</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/rdvuylzibseepdnzgl7j'); background-color: #f97316;"></div>
+          <div class="course-body">
+            <h3 class="course-name">🏛️ HISTORIA - B</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/fphpmpvz9hd2w8dn9yif'); background-color: #6366f1;"></div>
+          <div class="course-body">
+            <h3 class="course-name">🚀 FISICA - C</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/gjfjbf1ci1udb95aqrkg'); background-color: #f59e0b;"></div>
+          <div class="course-body">
+            <h3 class="course-name">🔬 QUIMICA - B</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_1400/jekusd55173byy6ajcok'); background-color: #ec4899;"></div>
+          <div class="course-body">
+            <h3 class="course-name">🎨 ARTE - A</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/u6l9fnzcqr6ilcdlbqbr'); background-color: #84cc16;"></div>
+          <div class="course-body">
+            <h3 class="course-name">💡 CIENCIAS - F</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/w19uyi3jrafsts3oiooo'); background-color: #1f2937;"></div>
+          <div class="course-body">
+            <h3 class="course-name">🧬 BIOLOGIA - C</h3>
+          </div>
+        </article>
+
+        <article class="course-card">
+          <div class="card-actions">
+            <span class="card-action-btn">#</span>
+            <span class="card-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+              </svg>
+            </span>
+          </div>
+          <div class="course-thumb" style="background-image: url('https://res.cloudinary.com/db3hacpfx/image/upload/f_auto,q_auto,w_600,h_450,c_fill,g_auto/dlohy9ufnwwu3uwq5548'); background-color: #14b8a6;"></div>
+          <div class="course-body">
+            <h3 class="course-name">📝 LENGUAJE</h3>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
