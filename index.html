@@ -4,6 +4,13 @@
   <meta charset="UTF-8" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ekawent" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
   <title>Student Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -78,6 +85,20 @@
           </div>
         </div>
         <button id="btn-logout" type="button" class="shrink-0 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-xl text-sm font-medium transition">Cerrar sesión</button>
+      </div>
+    </div>
+
+    <div id="pwa-install-banner" class="pwa-install-banner hidden" role="region" aria-label="Instalar app">
+      <div class="pwa-install-banner-inner">
+        <span class="pwa-install-banner-emoji" aria-hidden="true">📲</span>
+        <div class="pwa-install-banner-copy">
+          <p class="pwa-install-banner-title">Instala Ekawent</p>
+          <p id="pwa-banner-desc" class="pwa-install-banner-desc">Acceso rápido desde tu inicio.</p>
+        </div>
+        <div class="pwa-install-banner-actions">
+          <button type="button" id="btn-pwa-banner-install" class="pwa-install-banner-btn">Instalar</button>
+          <button type="button" id="btn-pwa-banner-dismiss" class="pwa-install-banner-close" aria-label="Ocultar aviso">✕</button>
+        </div>
       </div>
     </div>
 
@@ -470,11 +491,24 @@
         <h3 class="text-xl font-bold flex items-center gap-2"><span>🔔</span> Ajustes de Actividades</h3>
 
         <div class="space-y-3 pt-1">
-          <label class="text-xs text-zinc-400 font-bold uppercase tracking-wider pl-1">Recordatorios del navegador</label>
-          <p id="act-notif-status" class="text-sm text-zinc-300 leading-relaxed">Recibe avisos cuando tengas entregas hoy o mañana.</p>
+          <label class="text-xs text-zinc-400 font-bold uppercase tracking-wider pl-1">Instalar app (PWA)</label>
+          <p id="pwa-install-status" class="text-sm text-zinc-300 leading-relaxed">Instala la app para usarla como aplicación nativa.</p>
+
+          <div id="pwa-installed-info" class="hidden rounded-xl border border-emerald-900/50 bg-emerald-950/25 px-4 py-3 text-sm text-emerald-300/90 leading-relaxed">
+            La app está instalada. Ábrela desde el icono en tu inicio o escritorio.
+          </div>
+
+          <button type="button" id="btn-pwa-install" onclick="promptPwaInstall()" class="hidden w-full bg-zinc-800 hover:bg-zinc-700 transition rounded-xl py-2.5 font-semibold text-white text-sm border border-zinc-700">
+            📲 Instalar app
+          </button>
+        </div>
+
+        <div class="space-y-3 pt-1 border-t border-zinc-800">
+          <label class="text-xs text-zinc-400 font-bold uppercase tracking-wider pl-1">Recordatorios de actividades</label>
+          <p id="act-notif-status" class="text-sm text-zinc-300 leading-relaxed">Avisos de entregas hoy y mañana.</p>
 
           <div id="act-notif-granted-info" class="hidden rounded-xl border border-emerald-900/50 bg-emerald-950/25 px-4 py-3 text-sm text-emerald-300/90 leading-relaxed">
-            Te avisaremos el día de la entrega y un día antes mientras tengas esta pestaña abierta (puede estar en segundo plano).
+            Te avisaremos de entregas hoy y mañana a las 8:00 y 20:00 (hora Perú).
           </div>
 
           <div id="act-notif-denied-help" class="hidden rounded-xl border border-amber-900/50 bg-amber-950/20 px-4 py-3 text-sm text-amber-200/90 leading-relaxed space-y-2">
@@ -487,7 +521,7 @@
           </div>
 
           <button type="button" id="btn-act-notif-enable" onclick="enableActivityNotificationsFromSettings()" class="w-full bg-blue-600 hover:bg-blue-500 transition rounded-xl py-2.5 font-semibold text-white text-sm">
-            Activar notificaciones
+            Activar recordatorios
           </button>
         </div>
 
@@ -550,8 +584,8 @@
 
   </div><!-- end #dashboard-shell -->
 
-  <link rel="stylesheet" href="style.css?v=20260527h" />
-  <script src="app.js?v=20260527n"></script>
+  <link rel="stylesheet" href="style.css?v=20260527pwa" />
+  <script src="app.js?v=20260527prod"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

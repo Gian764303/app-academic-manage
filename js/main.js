@@ -1,7 +1,10 @@
 import './firebase-config.js';
+import './push-service.js';
+import { initPwa } from './pwa.js';
 import { initAuthUI } from './auth-service.js';
 
 initAuthUI();
+initPwa();
 
 // Function to handle showing the floating tooltip on click
 function addFloatingTooltipClickListeners() {

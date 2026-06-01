@@ -10,12 +10,19 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { auth } from './firebase-config.js';
 import { fetchUserDashboard, saveUserDashboard } from './data-service.js';
+import { syncPushRegistration, unregisterActivityPush } from './push-service.js';
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 let saveDebounceTimer = null;
 let currentUid = null;
+
+export function getCurrentUid() {
+  return currentUid;
+}
+
+window.getCurrentUid = getCurrentUid;
 
 export function debouncedCloudSave(state) {
   if (!currentUid) return;
@@ -118,6 +125,8 @@ export function initAuthUI() {
   });
 
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    const uid = currentUid;
+    if (uid) await unregisterActivityPush(uid);
     await logoutUser();
   });
 
@@ -143,7 +152,10 @@ export function initAuthUI() {
       if (typeof window.bootstrapDashboard === 'function') {
         await window.bootstrapDashboard();
       }
+      await syncPushRegistration(user.uid);
     } else {
+      const uid = currentUid;
+      if (uid) await unregisterActivityPush(uid);
       currentUid = null;
       window.saveToCloud = null;
       window.loadFromCloud = null;

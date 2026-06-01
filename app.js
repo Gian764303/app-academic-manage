@@ -399,7 +399,12 @@ async function bootstrapDashboard() {
   }
 
   loader?.classList.add('hidden');
-  initActivityNotifications();
+  window.syncPwaBanner?.();
+  if (window.location.hash === '#actividades') {
+    requestAnimationFrame(() => {
+      document.getElementById('panel-actividades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
 }
 
 window.bootstrapDashboard = bootstrapDashboard;
@@ -526,101 +531,6 @@ function daysUntil(dateStr) {
   return Math.ceil((d - today) / 86400000);
 }
 
-const ACT_NOTIF_SENT_KEY = 'activity-notif-sent';
-const ACT_NOTIF_ICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>";
-
-function getLocalDateKey() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-function loadActivityNotifLog() {
-  try {
-    const raw = localStorage.getItem(ACT_NOTIF_SENT_KEY);
-    const log = raw ? JSON.parse(raw) : {};
-    const today = getLocalDateKey();
-    if (log._date !== today) return { _date: today };
-    return log;
-  } catch {
-    return { _date: getLocalDateKey() };
-  }
-}
-
-function saveActivityNotifLog(log) {
-  log._date = getLocalDateKey();
-  try {
-    localStorage.setItem(ACT_NOTIF_SENT_KEY, JSON.stringify(log));
-  } catch (_) { /* quota */ }
-}
-
-function activityNotifWasSent(activityId, kind) {
-  const log = loadActivityNotifLog();
-  return !!log[`${kind}:${activityId}`];
-}
-
-function markActivityNotifSent(activityId, kind) {
-  const log = loadActivityNotifLog();
-  log[`${kind}:${activityId}`] = true;
-  saveActivityNotifLog(log);
-}
-
-function getPendingActivitiesForNotif() {
-  return (state.activities || []).filter((a) => a && a.fecha && !a.done);
-}
-
-function showBrowserActivityNotification(title, body, tag) {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  try {
-    const n = new Notification(title, {
-      body,
-      tag: String(tag),
-      icon: ACT_NOTIF_ICON,
-    });
-    n.onclick = () => {
-      window.focus();
-      document.getElementById('panel-actividades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      n.close();
-    };
-  } catch (err) {
-    console.warn('No se pudo mostrar la notificación:', err);
-  }
-}
-
-function notifyActivityGroup(activities, kind) {
-  const pending = activities.filter((a) => !activityNotifWasSent(a.id, kind));
-  if (!pending.length) return;
-
-  if (pending.length === 1) {
-    const a = pending[0];
-    const title = kind === 'today' ? '⚠ Entrega hoy' : '🔔 Entrega mañana';
-    showBrowserActivityNotification(
-      title,
-      `${a.titulo} — ${a.curso || 'Sin curso'}`,
-      `act-${kind}-${a.id}`
-    );
-    markActivityNotifSent(a.id, kind);
-    return;
-  }
-
-  const title = kind === 'today'
-    ? `⚠ ${pending.length} entregas hoy`
-    : `🔔 ${pending.length} entregas mañana`;
-  const body = pending.slice(0, 6).map((a) => `• ${a.titulo}`).join('\n');
-  showBrowserActivityNotification(title, body, `act-${kind}-batch`);
-  pending.forEach((a) => markActivityNotifSent(a.id, kind));
-}
-
-function checkActivityNotifications() {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-
-  const all = getPendingActivitiesForNotif();
-  const dueToday = all.filter((a) => daysUntil(a.fecha) === 0);
-  const dueTomorrow = all.filter((a) => daysUntil(a.fecha) === 1);
-
-  notifyActivityGroup(dueToday, 'today');
-  notifyActivityGroup(dueTomorrow, 'tomorrow');
-}
-
 async function requestActivityNotificationPermission() {
   if (!('Notification' in window)) return false;
   if (Notification.permission === 'granted') return true;
@@ -632,31 +542,6 @@ async function requestActivityNotificationPermission() {
     return false;
   }
 }
-
-function initActivityNotifications() {
-  if (!('Notification' in window)) return;
-
-  if (!window.__activityNotifVisibilityBound) {
-    window.__activityNotifVisibilityBound = true;
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        checkActivityNotifications();
-        if (isModalOpen('modal-ajustes-actividades')) syncActivityNotifSettingsUI();
-      }
-    });
-  }
-
-  if (!window.__activityNotifInterval) {
-    window.__activityNotifInterval = setInterval(checkActivityNotifications, 30 * 60 * 1000);
-  }
-
-  if (Notification.permission === 'granted') {
-    checkActivityNotifications();
-  }
-}
-
-window.checkActivityNotifications = checkActivityNotifications;
-window.initActivityNotifications = initActivityNotifications;
 
 function syncActivityNotifSettingsUI() {
   const statusEl = document.getElementById('act-notif-status');
@@ -673,14 +558,14 @@ function syncActivityNotifSettingsUI() {
     return;
   }
 
-  if (Notification.permission === 'granted') {
-    statusEl.textContent = 'Notificaciones activas';
+  if (Notification.permission === 'granted' && window.isPushRegistered?.()) {
+    statusEl.textContent = 'Recordatorios de actividades activos';
     statusEl.className = 'text-sm font-medium text-emerald-400';
     enableBtn?.classList.add('hidden');
     deniedHelp?.classList.add('hidden');
     grantedInfo?.classList.remove('hidden');
     if (grantedInfo) {
-      grantedInfo.textContent = 'Te avisaremos el día de la entrega y un día antes mientras tengas esta pestaña abierta (puede estar en segundo plano).';
+      grantedInfo.textContent = 'Te avisaremos de entregas hoy y mañana a las 8:00 y 20:00 (hora Perú), aunque tengas la app cerrada.';
     }
     return;
   }
@@ -695,7 +580,14 @@ function syncActivityNotifSettingsUI() {
     return;
   }
 
-  statusEl.textContent = 'Recibe avisos cuando tengas entregas hoy o mañana (pestaña abierta).';
+  if (Notification.permission === 'granted') {
+    statusEl.textContent = 'Permiso concedido. Pulsa el botón para activar recordatorios de actividades.';
+    enableBtn?.classList.remove('hidden');
+    deniedHelp?.classList.add('hidden');
+    return;
+  }
+
+  statusEl.textContent = 'Recibe avisos de entregas hoy o mañana en tus actividades.';
   enableBtn?.classList.remove('hidden');
   deniedHelp?.classList.add('hidden');
 }
@@ -706,17 +598,33 @@ async function enableActivityNotificationsFromSettings() {
     return;
   }
   const granted = await requestActivityNotificationPermission();
-  if (granted) {
-    checkActivityNotifications();
-    window.showAuthToast?.('Notificaciones activadas.', 'success');
-  } else if (Notification.permission === 'denied') {
-    window.showAuthToast?.('Permiso denegado. Revisa la configuración del sitio en tu navegador.', 'error');
+  if (!granted) {
+    if (Notification.permission === 'denied') {
+      window.showAuthToast?.('Permiso denegado. Revisa la configuración del sitio en tu navegador.', 'error');
+    }
+    syncActivityNotifSettingsUI();
+    return;
+  }
+
+  const uid = typeof window.getCurrentUid === 'function' ? window.getCurrentUid() : null;
+  if (!uid || !window.registerActivityPush) {
+    window.showAuthToast?.('Inicia sesión para activar recordatorios.', 'error');
+    syncActivityNotifSettingsUI();
+    return;
+  }
+
+  const pushResult = await window.registerActivityPush(uid);
+  if (pushResult.ok) {
+    window.showAuthToast?.('Recordatorios de actividades activados.', 'success');
+  } else {
+    window.showAuthToast?.('No se pudo activar. Recarga e intenta de nuevo.', 'error');
   }
   syncActivityNotifSettingsUI();
 }
 
 function abrirAjustesActividades() {
   syncActivityNotifSettingsUI();
+  window.syncPwaInstallUI?.();
   abrirModal('modal-ajustes-actividades');
 }
 
@@ -2479,7 +2387,6 @@ function agregarActividad() {
     });
   }
   persistAndSync();
-  checkActivityNotifications();
   cerrarModal('modal-actividad');
   document.getElementById('act-titulo').value = '';
   document.getElementById('act-fecha').value = '';
