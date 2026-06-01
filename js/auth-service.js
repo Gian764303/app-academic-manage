@@ -17,10 +17,6 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 let saveDebounceTimer = null;
 let currentUid = null;
 
-export function getCurrentUid() {
-  return currentUid;
-}
-
 export function debouncedCloudSave(state) {
   if (!currentUid) return;
   clearTimeout(saveDebounceTimer);

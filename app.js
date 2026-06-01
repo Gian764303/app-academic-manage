@@ -399,6 +399,7 @@ async function bootstrapDashboard() {
   }
 
   loader?.classList.add('hidden');
+  initActivityNotifications();
 }
 
 window.bootstrapDashboard = bootstrapDashboard;
@@ -482,6 +483,7 @@ function refreshOpenModals() {
     syncSettingsCheckboxes();
   }
   if (isModalOpen('modal-ajustes-calendario')) syncCalendarSettingsCheckboxes();
+  if (isModalOpen('modal-ajustes-actividades')) syncActivityNotifSettingsUI();
   const horSelect = document.getElementById('hor-clase');
   if (isModalOpen('modal-horario') && horSelect) {
     const current = horSelect.value;
@@ -523,6 +525,220 @@ function daysUntil(dateStr) {
   const d = new Date(dateStr + 'T00:00:00');
   return Math.ceil((d - today) / 86400000);
 }
+
+const ACT_NOTIF_SENT_KEY = 'activity-notif-sent';
+const ACT_NOTIF_PROMPT_KEY = 'activity-notif-prompted';
+const ACT_NOTIF_ICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>";
+
+function getLocalDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function loadActivityNotifLog() {
+  try {
+    const raw = localStorage.getItem(ACT_NOTIF_SENT_KEY);
+    const log = raw ? JSON.parse(raw) : {};
+    const today = getLocalDateKey();
+    if (log._date !== today) return { _date: today };
+    return log;
+  } catch {
+    return { _date: getLocalDateKey() };
+  }
+}
+
+function saveActivityNotifLog(log) {
+  log._date = getLocalDateKey();
+  try {
+    localStorage.setItem(ACT_NOTIF_SENT_KEY, JSON.stringify(log));
+  } catch (_) { /* quota */ }
+}
+
+function activityNotifWasSent(activityId, kind) {
+  const log = loadActivityNotifLog();
+  return !!log[`${kind}:${activityId}`];
+}
+
+function markActivityNotifSent(activityId, kind) {
+  const log = loadActivityNotifLog();
+  log[`${kind}:${activityId}`] = true;
+  saveActivityNotifLog(log);
+}
+
+function getPendingActivitiesForNotif() {
+  return (state.activities || []).filter((a) => a && a.fecha && !a.done);
+}
+
+function showBrowserActivityNotification(title, body, tag) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    const n = new Notification(title, {
+      body,
+      tag: String(tag),
+      icon: ACT_NOTIF_ICON,
+    });
+    n.onclick = () => {
+      window.focus();
+      document.getElementById('panel-actividades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      n.close();
+    };
+  } catch (err) {
+    console.warn('No se pudo mostrar la notificación:', err);
+  }
+}
+
+function notifyActivityGroup(activities, kind) {
+  const pending = activities.filter((a) => !activityNotifWasSent(a.id, kind));
+  if (!pending.length) return;
+
+  if (pending.length === 1) {
+    const a = pending[0];
+    const title = kind === 'today' ? '⚠ Entrega hoy' : '🔔 Entrega mañana';
+    showBrowserActivityNotification(
+      title,
+      `${a.titulo} — ${a.curso || 'Sin curso'}`,
+      `act-${kind}-${a.id}`
+    );
+    markActivityNotifSent(a.id, kind);
+    return;
+  }
+
+  const title = kind === 'today'
+    ? `⚠ ${pending.length} entregas hoy`
+    : `🔔 ${pending.length} entregas mañana`;
+  const body = pending.slice(0, 6).map((a) => `• ${a.titulo}`).join('\n');
+  showBrowserActivityNotification(title, body, `act-${kind}-batch`);
+  pending.forEach((a) => markActivityNotifSent(a.id, kind));
+}
+
+function checkActivityNotifications() {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+
+  const all = getPendingActivitiesForNotif();
+  const dueToday = all.filter((a) => daysUntil(a.fecha) === 0);
+  const dueTomorrow = all.filter((a) => daysUntil(a.fecha) === 1);
+
+  notifyActivityGroup(dueToday, 'today');
+  notifyActivityGroup(dueTomorrow, 'tomorrow');
+}
+
+async function requestActivityNotificationPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') return true;
+  if (Notification.permission === 'denied') return false;
+  try {
+    const result = await Notification.requestPermission();
+    return result === 'granted';
+  } catch {
+    return false;
+  }
+}
+
+function initActivityNotifications() {
+  if (!('Notification' in window)) return;
+
+  if (!window.__activityNotifVisibilityBound) {
+    window.__activityNotifVisibilityBound = true;
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        checkActivityNotifications();
+        if (isModalOpen('modal-ajustes-actividades')) syncActivityNotifSettingsUI();
+      }
+    });
+  }
+
+  if (!window.__activityNotifInterval) {
+    window.__activityNotifInterval = setInterval(checkActivityNotifications, 30 * 60 * 1000);
+  }
+
+  if (Notification.permission === 'granted') {
+    checkActivityNotifications();
+    return;
+  }
+
+  if (Notification.permission === 'denied') return;
+
+  if (localStorage.getItem(ACT_NOTIF_PROMPT_KEY)) return;
+
+  localStorage.setItem(ACT_NOTIF_PROMPT_KEY, '1');
+  window.showAuthToast?.(
+    'Activa las notificaciones del navegador para avisarte de entregas hoy y mañana.',
+    'info'
+  );
+
+  setTimeout(async () => {
+    const granted = await requestActivityNotificationPermission();
+    if (granted) checkActivityNotifications();
+  }, 1200);
+}
+
+window.checkActivityNotifications = checkActivityNotifications;
+window.initActivityNotifications = initActivityNotifications;
+
+function syncActivityNotifSettingsUI() {
+  const statusEl = document.getElementById('act-notif-status');
+  const enableBtn = document.getElementById('btn-act-notif-enable');
+  const deniedHelp = document.getElementById('act-notif-denied-help');
+  const grantedInfo = document.getElementById('act-notif-granted-info');
+  if (!statusEl) return;
+
+  if (!('Notification' in window)) {
+    statusEl.textContent = 'Tu navegador no admite notificaciones.';
+    enableBtn?.classList.add('hidden');
+    deniedHelp?.classList.add('hidden');
+    grantedInfo?.classList.add('hidden');
+    return;
+  }
+
+  if (Notification.permission === 'granted') {
+    statusEl.textContent = 'Notificaciones activas';
+    statusEl.className = 'text-sm font-medium text-emerald-400';
+    enableBtn?.classList.add('hidden');
+    deniedHelp?.classList.add('hidden');
+    grantedInfo?.classList.remove('hidden');
+    if (grantedInfo) {
+      grantedInfo.textContent = 'Te avisaremos el día de la entrega y un día antes mientras tengas esta pestaña abierta (puede estar en segundo plano).';
+    }
+    return;
+  }
+
+  grantedInfo?.classList.add('hidden');
+  statusEl.className = 'text-sm text-zinc-300 leading-relaxed';
+
+  if (Notification.permission === 'denied') {
+    statusEl.textContent = 'Las notificaciones están bloqueadas en tu navegador.';
+    enableBtn?.classList.add('hidden');
+    deniedHelp?.classList.remove('hidden');
+    return;
+  }
+
+  statusEl.textContent = 'Recibe avisos cuando tengas entregas hoy o mañana (pestaña abierta).';
+  enableBtn?.classList.remove('hidden');
+  deniedHelp?.classList.add('hidden');
+}
+
+async function enableActivityNotificationsFromSettings() {
+  if (!('Notification' in window)) {
+    window.showAuthToast?.('Tu navegador no admite notificaciones.', 'error');
+    return;
+  }
+  const granted = await requestActivityNotificationPermission();
+  if (granted) {
+    checkActivityNotifications();
+    window.showAuthToast?.('Notificaciones activadas.', 'success');
+  } else if (Notification.permission === 'denied') {
+    window.showAuthToast?.('Permiso denegado. Revisa la configuración del sitio en tu navegador.', 'error');
+  }
+  syncActivityNotifSettingsUI();
+}
+
+function abrirAjustesActividades() {
+  syncActivityNotifSettingsUI();
+  abrirModal('modal-ajustes-actividades');
+}
+
+window.abrirAjustesActividades = abrirAjustesActividades;
+window.enableActivityNotificationsFromSettings = enableActivityNotificationsFromSettings;
 function urgencyTag(days) {
   if (days < 0) return `<span class="text-xs px-2 py-0.5 rounded-lg tag-red">💀 Vencida</span>`;
   if (days === 0) return `<span class="text-xs px-2 py-0.5 rounded-lg tag-red"><span class="text-red-500 font-bold">⚠</span> Hoy</span>`;
@@ -684,6 +900,8 @@ function abrirModal(id, showDetails = null) {
     syncSettingsCheckboxes();
   } else if (id === 'modal-ajustes-calendario') {
     syncCalendarSettingsCheckboxes();
+  } else if (id === 'modal-ajustes-actividades') {
+    syncActivityNotifSettingsUI();
   } else if (id === 'modal-actividad') {
     if (editingActivityId === null) {
       const titleEl = document.getElementById('modal-actividad-titulo');
@@ -2278,6 +2496,7 @@ function agregarActividad() {
     });
   }
   persistAndSync();
+  checkActivityNotifications();
   cerrarModal('modal-actividad');
   document.getElementById('act-titulo').value = '';
   document.getElementById('act-fecha').value = '';
@@ -2935,6 +3154,12 @@ function renderApp() {
         <div class="panel-header-actions">
           <button onclick="abrirModal('modal-actividad')" class="bg-blue-600 hover:bg-blue-500 transition px-4 py-2 rounded-xl text-sm font-medium">+ Nueva</button>
           <button onclick="abrirModal('modal-historial')" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition px-4 py-2 rounded-xl text-sm font-medium">Historial</button>
+          <button id="btn-activity-settings" onclick="abrirAjustesActividades()" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition rounded-xl" title="Ajustes de actividades">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
         </div>
       </div>
       <div id="panel-actividades-body" class="grid grid-cols-1 xl:grid-cols-[320px_minmax(0,1fr)] gap-6">

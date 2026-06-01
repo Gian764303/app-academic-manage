@@ -464,6 +464,39 @@
       </div>
     </div>
 
+    <!-- MODAL: Ajustes de Actividades -->
+    <div id="modal-ajustes-actividades" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-[#1e1e1e] border border-zinc-700 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl modal-box max-h-[90vh] overflow-y-auto animate-in">
+        <h3 class="text-xl font-bold flex items-center gap-2"><span>🔔</span> Ajustes de Actividades</h3>
+
+        <div class="space-y-3 pt-1">
+          <label class="text-xs text-zinc-400 font-bold uppercase tracking-wider pl-1">Recordatorios del navegador</label>
+          <p id="act-notif-status" class="text-sm text-zinc-300 leading-relaxed">Recibe avisos cuando tengas entregas hoy o mañana.</p>
+
+          <div id="act-notif-granted-info" class="hidden rounded-xl border border-emerald-900/50 bg-emerald-950/25 px-4 py-3 text-sm text-emerald-300/90 leading-relaxed">
+            Te avisaremos el día de la entrega y un día antes mientras tengas esta pestaña abierta (puede estar en segundo plano).
+          </div>
+
+          <div id="act-notif-denied-help" class="hidden rounded-xl border border-amber-900/50 bg-amber-950/20 px-4 py-3 text-sm text-amber-200/90 leading-relaxed space-y-2">
+            <p>Para activarlas manualmente:</p>
+            <ol class="list-decimal list-inside space-y-1 text-zinc-300">
+              <li>Toca el candado o <strong>ⓘ</strong> junto a la URL.</li>
+              <li>Busca <strong>Notificaciones</strong>.</li>
+              <li>Cámbialo a <strong>Permitir</strong> y recarga la página.</li>
+            </ol>
+          </div>
+
+          <button type="button" id="btn-act-notif-enable" onclick="enableActivityNotificationsFromSettings()" class="w-full bg-blue-600 hover:bg-blue-500 transition rounded-xl py-2.5 font-semibold text-white text-sm">
+            Activar notificaciones
+          </button>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-zinc-800">
+          <button onclick="cerrarModal('modal-ajustes-actividades')" class="flex-1 bg-zinc-700 hover:bg-zinc-600 transition rounded-xl py-2.5 font-medium text-white">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MODAL: Ajustes del Calendario -->
     <div id="modal-ajustes-calendario" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-[#1e1e1e] border border-zinc-700 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-2xl modal-box max-h-[90vh] overflow-y-auto animate-in">
@@ -518,7 +551,7 @@
   </div><!-- end #dashboard-shell -->
 
   <link rel="stylesheet" href="style.css?v=20260527h" />
-  <script src="app.js?v=20260527i"></script>
+  <script src="app.js?v=20260527m"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
