@@ -527,7 +527,6 @@ function daysUntil(dateStr) {
 }
 
 const ACT_NOTIF_SENT_KEY = 'activity-notif-sent';
-const ACT_NOTIF_PROMPT_KEY = 'activity-notif-prompted';
 const ACT_NOTIF_ICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>";
 
 function getLocalDateKey() {
@@ -653,23 +652,7 @@ function initActivityNotifications() {
 
   if (Notification.permission === 'granted') {
     checkActivityNotifications();
-    return;
   }
-
-  if (Notification.permission === 'denied') return;
-
-  if (localStorage.getItem(ACT_NOTIF_PROMPT_KEY)) return;
-
-  localStorage.setItem(ACT_NOTIF_PROMPT_KEY, '1');
-  window.showAuthToast?.(
-    'Activa las notificaciones del navegador para avisarte de entregas hoy y mañana.',
-    'info'
-  );
-
-  setTimeout(async () => {
-    const granted = await requestActivityNotificationPermission();
-    if (granted) checkActivityNotifications();
-  }, 1200);
 }
 
 window.checkActivityNotifications = checkActivityNotifications;
