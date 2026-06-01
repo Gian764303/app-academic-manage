@@ -961,3 +961,203 @@ html, body {
   color: #f4f4f5;
 }
 
+/* ── Mobile layout ─────────────────────────────────────────────────────────── */
+
+.book-mobile-nav {
+  display: none;
+}
+
+.book-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --book-header-h: 3.1rem;
+    --book-mobile-nav-h: 2.75rem;
+  }
+
+  .book-header {
+    padding: 0.6rem 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .book-emoji {
+    font-size: 1.35rem;
+  }
+
+  .book-title {
+    font-size: 0.9375rem;
+  }
+
+  .book-subtitle {
+    display: none;
+  }
+
+  .book-sync {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+    white-space: nowrap;
+  }
+
+  .book-mobile-nav {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.45rem 0.75rem;
+    background: #141414;
+    border-bottom: 1px solid #2a2a2a;
+    position: sticky;
+    top: var(--book-header-h);
+    z-index: 19;
+  }
+
+  .book-mobile-nav-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    border: 1px solid #333;
+    border-radius: 0.65rem;
+    background: #232323;
+    color: #e4e4e7;
+    font-family: var(--sidebar-font);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    padding: 0.5rem 0.65rem;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .book-mobile-nav-btn:active {
+    background: #2e2e2e;
+  }
+
+  .book-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  .book-sidebar-backdrop.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .book-body {
+    flex-direction: column;
+  }
+
+  .courses-sidebar,
+  .book-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(88vw, 300px) !important;
+    max-width: 300px;
+    height: 100dvh !important;
+    z-index: 100;
+    transform: translateX(-105%);
+    transition: transform 0.22s ease;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    padding-top: calc(var(--book-header-h) + env(safe-area-inset-top, 0px));
+    box-shadow: 8px 0 28px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Anula z-index:10 del hub en desktop — si no, páginas queda detrás del backdrop */
+  .book-body--hub .book-sidebar {
+    z-index: 101 !important;
+  }
+
+  .book-body--hub.mobile-courses-open .courses-sidebar {
+    transform: translateX(0);
+    z-index: 102 !important;
+  }
+
+  .book-body.mobile-pages-open .book-sidebar,
+  .book-body--hub.mobile-pages-open .book-sidebar {
+    transform: translateX(0);
+    z-index: 102 !important;
+  }
+
+  .book-body.sidebar-collapsed .courses-sidebar,
+  .book-body.sidebar-collapsed .book-sidebar {
+    width: min(88vw, 300px) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    border-right: 1px solid #2a2a2a !important;
+  }
+
+  .book-content {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .headless-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.45rem 0.65rem;
+    gap: 0.3rem;
+    top: calc(var(--book-header-h) + var(--book-mobile-nav-h));
+    scrollbar-width: none;
+  }
+
+  .headless-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .headless-btn {
+    min-height: 2.125rem;
+    padding: 0.38rem 0.55rem;
+    font-size: 0.6875rem;
+  }
+
+  .headless-select {
+    min-height: 2.125rem;
+    font-size: 0.72rem;
+    max-width: 7.5rem;
+  }
+
+  .book-sidebar-toggle-btn {
+    min-width: 2.125rem;
+    min-height: 2.125rem;
+  }
+
+  .book-main {
+    padding: 0.85rem 0.75rem 2.5rem;
+  }
+
+  .book-editor .tiptap {
+    min-height: calc(100dvh - 12rem);
+    font-size: 0.9375rem;
+  }
+
+  .book-page-item {
+    font-size: 0.8125rem !important;
+    padding: 0.35rem 0.55rem !important;
+  }
+
+  .book-page-row {
+    min-height: 2rem;
+  }
+
+  .book-page-drag,
+  .book-page-menu {
+    flex: 0 0 1.75rem !important;
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+
+  .book-page-rename {
+    font-size: 0.8125rem !important;
+  }
+}
+

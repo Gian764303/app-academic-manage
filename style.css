@@ -82,15 +82,292 @@
 .tag-yellow{ background: rgba(234,179,8,0.15);  color: #facc15; border: 1px solid rgba(234,179,8,0.3); }
 .tag-blue  { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
 
+/* ── Dashboard panels & headers ── */
+.dashboard-panel {
+  padding: 1.5rem;
+  border-radius: 1.5rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.panel-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.panel-header-heading {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.panel-header-heading--sm {
+  font-size: 1.25rem;
+}
+
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  flex-shrink: 1;
+}
+
+.panel-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.panel-header-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-header-actions > button.w-9,
+.panel-header-actions > button.panel-toggle-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 2.25rem;
+  padding: 0;
+}
+
+.panel-cal-title {
+  min-width: 8rem;
+}
+
 /* Panel collapse toggle — center chevron icon */
-button[onclick*="togglePanelBody"] {
+button[onclick*="togglePanelBody"],
+.panel-toggle-btn {
   line-height: 0;
 }
 
-button[onclick*="togglePanelBody"] svg {
+button[onclick*="togglePanelBody"] svg,
+.panel-toggle-btn svg {
   display: block;
   flex-shrink: 0;
   transform: translateY(1px);
+}
+
+/* Panel headers — mobile layout */
+@media (max-width: 639px) {
+  #app {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .dashboard-panel,
+  #panel-cursos,
+  #panel-horario,
+  #panel-actividades,
+  #panel-calendario {
+    padding: 1rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .panel-header {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .panel-header--calendar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.625rem !important;
+  }
+
+  .panel-header-title {
+    width: auto !important;
+    flex: 1 1 auto !important;
+    min-width: 0;
+  }
+
+  .panel-header--calendar .panel-header-title {
+    width: 100% !important;
+  }
+
+  .panel-header-heading {
+    font-size: 1.125rem !important;
+  }
+
+  .panel-header-heading--sm {
+    font-size: 1rem !important;
+  }
+
+  .panel-header-actions {
+    width: auto !important;
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+    flex-shrink: 0 !important;
+    justify-content: flex-end !important;
+    gap: 0.375rem !important;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .panel-header-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .panel-header--calendar .panel-header-actions {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    justify-content: space-between !important;
+  }
+
+  .panel-header-actions > button:not(.panel-toggle-btn) {
+    flex: 0 0 auto !important;
+    min-width: 0 !important;
+    white-space: nowrap;
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.75rem !important;
+    line-height: 1.2;
+  }
+
+  .panel-header-actions > button.panel-toggle-btn,
+  .panel-header-actions > button.w-9 {
+    width: 2rem !important;
+    height: 2rem !important;
+    flex: 0 0 2rem !important;
+  }
+
+  .panel-header-title .panel-toggle-btn {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .panel-header--calendar .panel-header-heading {
+    font-size: 1.0625rem !important;
+    line-height: 1.35;
+  }
+
+  .panel-header-actions--calendar {
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    gap: 0.375rem !important;
+  }
+
+  .panel-header-actions--calendar > button:not(.panel-toggle-btn) {
+    flex: 0 0 auto !important;
+    padding: 0.375rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .panel-cal-title,
+  #cal-title {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: auto !important;
+    font-size: 0.9375rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #auth-user-bar .max-w-7xl {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  #auth-user-bar #btn-logout {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Calendar — compact cells with activity dots */
+  #panel-calendario-body {
+    border-radius: 1rem !important;
+  }
+
+  #panel-calendario-body > div:not(#cal-grid) {
+    padding: 0.375rem 0.125rem !important;
+    font-size: 0.625rem !important;
+  }
+
+  .cal-day-cell,
+  .cal-day-cell.cal-day-empty {
+    min-height: 3.25rem !important;
+    padding: 0.375rem 0.125rem !important;
+    align-items: center !important;
+    text-align: center;
+  }
+
+  .cal-day-header {
+    position: relative;
+    width: 100%;
+    justify-content: center !important;
+    margin-bottom: 0.25rem !important;
+    padding: 0 !important;
+    min-height: auto;
+  }
+
+  .cal-day-header .day-num,
+  .cal-day-header .today-day-marker {
+    margin: 0 auto;
+  }
+
+  .cal-day-add-btn {
+    display: none !important;
+  }
+
+  .cal-day-acts--desktop {
+    display: none !important;
+  }
+
+  .cal-day-dots--mobile {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: 0.125rem;
+    min-height: 0.5rem;
+  }
+
+  .cal-act-dot {
+    width: 6px !important;
+    height: 6px !important;
+    background: #a1a1aa !important;
+  }
+
+  .cal-day-has-events .day-num,
+  .cal-day-has-events .today-day-marker {
+    font-weight: 700;
+  }
+
+  .today-day-marker,
+  .day-num {
+    font-size: 0.6875rem !important;
+  }
+
+  .today-day-marker {
+    min-width: 1.375rem !important;
+    height: 1.375rem !important;
+  }
 }
 
 .folder-emoji {
@@ -181,6 +458,124 @@ td[data-col]{position:relative;}
   background: rgba(96, 165, 250, 0.12);
   border: 2px solid rgba(96, 165, 250, 0.9);
   box-shadow: 0 0 12px rgba(96, 165, 250, 0.5), inset 0 0 8px rgba(96, 165, 250, 0.1);
+}
+
+.cal-day-dots--mobile {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .cal-day-dots--mobile {
+    display: none !important;
+  }
+}
+
+.cal-act-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* Tipos de actividad — sheet en móvil, popover en desktop */
+.pop-tipos-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.pop-tipos-panel {
+  z-index: 61;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pop-tipos-panel.hidden {
+  display: none !important;
+}
+
+.pop-tipos-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pop-tipos-panel--mobile {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: auto;
+  width: 100%;
+  max-height: 88vh;
+  padding: 1.25rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  border-radius: 1.25rem 1.25rem 0 0;
+  border-bottom: none;
+  overflow: hidden;
+}
+
+.pop-tipos-panel--desktop {
+  position: fixed;
+  max-height: min(70vh, 520px);
+  padding: 1rem;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .pop-tipos-panel-footer {
+    display: none;
+  }
+}
+
+/* Ajustes de horario — sheet en móvil */
+@media (max-width: 767px) {
+  #modal-ajustes-horario {
+    padding: 0 !important;
+    align-items: flex-end !important;
+    overflow: hidden;
+  }
+
+  #modal-ajustes-horario > .modal-box--schedule-settings {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: min(92vh, 100dvh) !important;
+    border-radius: 1.25rem 1.25rem 0 0 !important;
+    border-bottom: none !important;
+    padding: 1.25rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #modal-ajustes-horario .schedule-settings-grid {
+    gap: 1.25rem !important;
+  }
+
+  #modal-ajustes-horario #schedule-days-checkboxes,
+  #modal-ajustes-horario #schedule-properties-container {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  #modal-ajustes-horario .schedule-settings-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #1e1e1e;
+    box-shadow: 0 -12px 24px rgba(30, 30, 30, 0.95);
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
 }
 
 .cal-act-card {
@@ -601,12 +996,22 @@ td[data-col]{position:relative;}
   96%, 100% { opacity: 0; }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .auth-login-btn {
-    top: 3rem;
-    right: 4.5rem;
+    top: auto;
+    bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
   }
 
+  .auth-login-btn-inner {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
   .auth-login-btn-inner {
     padding: 0.5625rem 1.125rem;
     font-size: 0.8125rem;

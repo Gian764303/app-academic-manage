@@ -458,6 +458,7 @@ function switchPage(pageId) {
   syncHeadlessToolbar(editor);
   editor.commands.focus('end');
   scheduleSave();
+  closeMobileSidebars();
 }
 
 function addPage() {
@@ -779,6 +780,7 @@ async function switchCourse(newCourseId) {
   renderPagesList();
   syncHeadlessToolbar(editor);
   editor.commands.focus('end');
+  closeMobileSidebars();
   unsubBook = subscribeBook(
     currentUid,
     courseId,
@@ -793,14 +795,77 @@ async function switchCourse(newCourseId) {
   setSyncStatus('saved', 'Listo');
 }
 
+function isMobileBookView() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
+function closeMobileSidebars() {
+  els.bookBody?.classList.remove('mobile-courses-open', 'mobile-pages-open');
+  document.getElementById('book-sidebar-backdrop')?.classList.remove('is-visible');
+}
+
+function toggleMobileDrawer(which) {
+  if (!isMobileBookView()) return;
+  const openClass = which === 'courses' ? 'mobile-courses-open' : 'mobile-pages-open';
+  const isOpen = els.bookBody?.classList.contains(openClass);
+  closeMobileSidebars();
+  if (!isOpen) {
+    els.bookBody?.classList.add(openClass);
+    document.getElementById('book-sidebar-backdrop')?.classList.add('is-visible');
+  }
+}
+
+function ensureMobileBookUI() {
+  if (!document.getElementById('book-sidebar-backdrop')) {
+    const backdrop = document.createElement('div');
+    backdrop.id = 'book-sidebar-backdrop';
+    backdrop.className = 'book-sidebar-backdrop';
+    backdrop.addEventListener('click', closeMobileSidebars);
+    document.body.appendChild(backdrop);
+  }
+
+  if (!document.getElementById('book-mobile-nav')) {
+    const header = document.querySelector('.book-header');
+    const nav = document.createElement('div');
+    nav.id = 'book-mobile-nav';
+    nav.className = 'book-mobile-nav';
+    if (isCoursesHub) {
+      nav.innerHTML = `
+        <button type="button" id="book-mobile-courses-btn" class="book-mobile-nav-btn">📚 Cursos</button>
+        <button type="button" id="book-mobile-pages-btn" class="book-mobile-nav-btn">📄 Páginas</button>
+      `;
+    } else {
+      nav.innerHTML = `<button type="button" id="book-mobile-pages-btn" class="book-mobile-nav-btn">📄 Páginas</button>`;
+    }
+    header?.insertAdjacentElement('afterend', nav);
+    document.getElementById('book-mobile-courses-btn')?.addEventListener('click', () => toggleMobileDrawer('courses'));
+    document.getElementById('book-mobile-pages-btn')?.addEventListener('click', () => toggleMobileDrawer('pages'));
+  }
+}
+
 function initSidebarToggle() {
+  ensureMobileBookUI();
   const key = isCoursesHub ? 'book-sidebar-hub' : `book-sidebar-${courseId}`;
-  if (localStorage.getItem(key) === '0') setSidebarCollapsed(true);
+
+  if (isMobileBookView()) {
+    setSidebarCollapsed(true);
+    closeMobileSidebars();
+  } else if (localStorage.getItem(key) === '0') {
+    setSidebarCollapsed(true);
+  }
 
   els.sidebarToggle?.addEventListener('click', () => {
+    if (isMobileBookView()) {
+      toggleMobileDrawer('pages');
+      return;
+    }
     const collapsed = !els.bookBody?.classList.contains('sidebar-collapsed');
     setSidebarCollapsed(collapsed);
     localStorage.setItem(key, collapsed ? '0' : '1');
+  });
+
+  window.addEventListener('resize', () => {
+    if (!isMobileBookView()) closeMobileSidebars();
   });
 }
 

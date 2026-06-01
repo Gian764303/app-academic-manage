@@ -706,7 +706,10 @@ function cerrarModal(id) {
   document.getElementById(id).classList.add('hidden');
   cerrarEmojiPicker();
   if (id === 'modal-ver-dia') modalVerDiaFecha = null;
-  if (id === 'modal-actividad') editingActivityId = null;
+  if (id === 'modal-actividad') {
+    editingActivityId = null;
+    cerrarPopTipos();
+  }
 }
 
 function abrirModalConFecha(fecha) {
@@ -2063,17 +2066,51 @@ const BASE_TIPO_DETAILS = {
   investigar: { emoji: '🔍', label: 'Investigar' }
 };
 
+function isMobileTiposView() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
+function posicionarPopTiposDesktop() {
+  const panel = document.getElementById('pop-tipos-panel');
+  const trigger = document.getElementById('btn-tipos-trigger');
+  if (!panel || !trigger) return;
+  const rect = trigger.getBoundingClientRect();
+  const panelWidth = 320;
+  let left = rect.right + 12;
+  let top = rect.top - 80;
+  if (left + panelWidth > window.innerWidth - 16) {
+    left = Math.max(16, rect.left - panelWidth - 12);
+  }
+  if (top + 400 > window.innerHeight - 16) {
+    top = Math.max(16, window.innerHeight - 420);
+  }
+  if (top < 16) top = 16;
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+  panel.style.width = `${panelWidth}px`;
+}
+
 function abrirPopTipos(event) {
   if (event) event.stopPropagation();
   const panel = document.getElementById('pop-tipos-panel');
-  if (panel) {
-    const isHidden = panel.classList.contains('hidden');
-    if (isHidden) {
-      panel.classList.remove('hidden');
-      renderTiposGrid();
+  const backdrop = document.getElementById('pop-tipos-backdrop');
+  if (!panel) return;
+  const isHidden = panel.classList.contains('hidden');
+  if (isHidden) {
+    panel.classList.remove('hidden');
+    renderTiposGrid();
+    if (isMobileTiposView()) {
+      backdrop?.classList.remove('hidden');
+      panel.classList.add('pop-tipos-panel--mobile');
+      panel.classList.remove('pop-tipos-panel--desktop');
     } else {
-      panel.classList.add('hidden');
+      backdrop?.classList.add('hidden');
+      panel.classList.add('pop-tipos-panel--desktop');
+      panel.classList.remove('pop-tipos-panel--mobile');
+      posicionarPopTiposDesktop();
     }
+  } else {
+    cerrarPopTipos();
   }
 }
 
@@ -2111,7 +2148,15 @@ function toggleTipoSeleccionado(tipo) {
 
 function cerrarPopTipos() {
   const panel = document.getElementById('pop-tipos-panel');
-  if (panel) panel.classList.add('hidden');
+  const backdrop = document.getElementById('pop-tipos-backdrop');
+  if (panel) {
+    panel.classList.add('hidden');
+    panel.classList.remove('pop-tipos-panel--mobile', 'pop-tipos-panel--desktop');
+    panel.style.left = '';
+    panel.style.top = '';
+    panel.style.width = '';
+  }
+  backdrop?.classList.add('hidden');
 }
 
 function eliminarTipo(event, tipo) {
@@ -2175,8 +2220,7 @@ function actualizarTextoTiposSeleccionados() {
 function guardarTiposSeleccionados(event) {
   if (event) event.stopPropagation();
   savedTipos = [...selectedTipos];
-  const panel = document.getElementById('pop-tipos-panel');
-  if (panel) panel.classList.add('hidden');
+  cerrarPopTipos();
   actualizarTextoTiposSeleccionados();
 }
 
@@ -2196,8 +2240,7 @@ function resetTiposSeleccionados() {
     triggerText.classList.add('text-zinc-400');
     triggerText.classList.remove('text-white', 'font-medium');
   }
-  const panel = document.getElementById('pop-tipos-panel');
-  if (panel) panel.classList.add('hidden');
+  cerrarPopTipos();
   renderTiposGrid();
 }
 
@@ -2405,7 +2448,7 @@ function renderActivities() {
       <div><div class="font-semibold text-white">Hoy</div><div class="text-zinc-400 text-sm">${todayCount} actividades</div></div>
     </div>
     <div onclick="toggleActivityFilter('7dias')" class="flex items-center gap-3 p-3 bg-[#2a2a2a] hover:bg-[#333] transition rounded-xl cursor-pointer ring-2 ${currentActivityFilter === '7dias' ? 'ring-blue-500 bg-[#333]' : 'ring-transparent'}">
-      <span class="text-xl">⚪</span>
+      <span class="text-xl">7️⃣</span>
       <div><div class="font-semibold text-white">7 días</div><div class="text-zinc-400 text-sm">${week7Count} actividades</div></div>
     </div>
     <div onclick="toggleActivityFilter('15dias')" class="flex items-center gap-3 p-3 bg-[#2a2a2a] hover:bg-[#333] transition rounded-xl cursor-pointer ring-2 ${currentActivityFilter === '15dias' ? 'ring-blue-500 bg-[#333]' : 'ring-transparent'}">
@@ -2444,6 +2487,15 @@ function renderCalHechoCheck(id) {
       <span class="text-xs font-semibold text-zinc-400">Hecho</span>
     </button>
   `);
+}
+
+function renderCalendarActivityDots(acts) {
+  if (!acts.length) return '';
+  return `
+    <div class="cal-day-dots cal-day-dots--mobile" aria-label="${acts.length} actividad${acts.length === 1 ? '' : 'es'}">
+      ${acts.map(() => '<span class="cal-act-dot"></span>').join('')}
+    </div>
+  `;
 }
 
 function renderCalendarActivityCard(a) {
@@ -2531,12 +2583,13 @@ function renderCalendar() {
       ? `<span class="today-day-marker cursor-pointer hover:opacity-80" title="Ver actividades del día" onclick="abrirModalVerDiaDesdeCalendario('${dateStr}')">${d}</span>`
       : `<span class="day-num text-zinc-400 cursor-pointer hover:text-white" title="Ver actividades del día" onclick="abrirModalVerDiaDesdeCalendario('${dateStr}')">${d}</span>`;
     cells += `
-      <div data-date="${dateStr}" ondragover="onCalendarDayDragOver(event)" ondragenter="onCalendarDayDragEnter(event)" ondragleave="onCalendarDayDragLeave(event)" ondrop="onCalendarDayDrop(event, '${dateStr}')" class="cal-day-cell border border-zinc-800 p-2 text-sm hover:bg-[#202020] transition relative min-h-[7rem] flex flex-col group ${isToday ? 'today-cell' : ''}">
-        <div class="shrink-0 mb-1 flex items-center justify-between">
+      <div data-date="${dateStr}" ondragover="onCalendarDayDragOver(event)" ondragenter="onCalendarDayDragEnter(event)" ondragleave="onCalendarDayDragLeave(event)" ondrop="onCalendarDayDrop(event, '${dateStr}')" class="cal-day-cell border border-zinc-800 p-2 text-sm hover:bg-[#202020] transition relative min-h-[7rem] flex flex-col group ${isToday ? 'today-cell' : ''} ${acts.length ? 'cal-day-has-events' : ''}">
+        <div class="cal-day-header shrink-0 mb-1 flex items-center justify-between">
           ${dayLabel}
-          <button onclick="abrirModalConFecha('${dateStr}')" class="opacity-0 group-hover:opacity-100 transition text-zinc-400 hover:text-blue-300 border border-zinc-600 hover:border-blue-400 rounded-lg w-7 h-7 flex items-center justify-center text-lg font-light leading-none" title="Agregar actividad">+</button>
+          <button type="button" onclick="event.stopPropagation(); abrirModalConFecha('${dateStr}')" class="cal-day-add-btn opacity-0 group-hover:opacity-100 transition text-zinc-400 hover:text-blue-300 border border-zinc-600 hover:border-blue-400 rounded-lg w-7 h-7 flex items-center justify-center text-lg font-light leading-none" title="Agregar actividad">+</button>
         </div>
-        <div class="flex-1 space-y-1 overflow-y-auto overflow-x-hidden pr-0.5 min-h-0">
+        ${renderCalendarActivityDots(acts)}
+        <div class="cal-day-acts cal-day-acts--desktop flex-1 space-y-1 overflow-y-auto overflow-x-hidden pr-0.5 min-h-0">
           ${acts.map(a => renderCalendarActivityCard(a)).join('')}
         </div>
       </div>
@@ -2813,20 +2866,20 @@ function renderApp() {
     </div>
 
     <!-- CURSOS -->
-    <section id="panel-cursos" class="bg-[#181818] border border-zinc-800 rounded-3xl p-6 animate-in">
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-          <button type="button" onclick="togglePanelBody('panel-cursos-body','icon-panel-cursos')" title="Ocultar/mostrar panel" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl w-9 h-9 flex items-center justify-center transition">
+    <section id="panel-cursos" class="dashboard-panel bg-[#181818] border border-zinc-800 rounded-3xl animate-in">
+      <div class="panel-header">
+        <div class="panel-header-title">
+          <button type="button" onclick="togglePanelBody('panel-cursos-body','icon-panel-cursos')" title="Ocultar/mostrar panel" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition">
             <svg id="icon-panel-cursos" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-300 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9l6 6 6-6"></path>
             </svg>
           </button>
-          <h2 class="text-2xl font-bold">Cursos</h2>
+          <h2 class="panel-header-heading">Cursos</h2>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="panel-header-actions">
           <button onclick="abrirModal('modal-curso')" class="bg-blue-600 hover:bg-blue-500 transition px-4 py-2 rounded-xl text-sm font-medium">+ Nuevo</button>
           <button onclick="abrirModal('modal-ver-cursos')" class="bg-zinc-800 hover:bg-zinc-775 border border-zinc-700 text-zinc-350 hover:text-white transition px-4 py-2 rounded-xl text-sm font-medium">Ver cursos</button>
-          <button onclick="abrirTodosCuadernos()" title="Todos los cursos" class="bg-zinc-800 hover:bg-zinc-775 border border-zinc-700 text-zinc-350 hover:text-white transition w-9 h-9 rounded-xl flex items-center justify-center">
+          <button onclick="abrirTodosCuadernos()" title="Todos los cursos" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-775 border border-zinc-700 text-zinc-350 hover:text-white transition rounded-xl">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
@@ -2842,20 +2895,20 @@ function renderApp() {
     </section>
 
     <!-- HORARIO -->
-    <section id="panel-horario" class="bg-[#181818] border border-zinc-800 rounded-3xl p-6 animate-in">
-      <div class="flex items-center justify-between mb-6 gap-3">
-        <div class="flex items-center gap-3">
-          <button type="button" onclick="togglePanelBody('panel-horario-body','icon-panel-horario')" title="Ocultar/mostrar panel" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl w-9 h-9 flex items-center justify-center transition">
+    <section id="panel-horario" class="dashboard-panel bg-[#181818] border border-zinc-800 rounded-3xl animate-in">
+      <div class="panel-header">
+        <div class="panel-header-title">
+          <button type="button" onclick="togglePanelBody('panel-horario-body','icon-panel-horario')" title="Ocultar/mostrar panel" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition">
             <svg id="icon-panel-horario" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-300 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9l6 6 6-6"></path>
             </svg>
           </button>
-          <h2 class="text-2xl font-bold">Horario Semanal</h2>
+          <h2 class="panel-header-heading">Horario Semanal</h2>
         </div>
-        <div class="flex items-center gap-2 shrink-0 relative">
+        <div class="panel-header-actions">
           <button onclick="abrirModal('modal-horario')" class="bg-blue-600 hover:bg-blue-500 transition px-4 py-2 rounded-xl text-sm font-medium">+ Nuevo</button>
           <button onclick="abrirModal('modal-ver-horario')" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition px-4 py-2 rounded-xl text-sm font-medium">Ver horario</button>
-          <button id="btn-schedule-settings" onclick="abrirModal('modal-ajustes-horario')" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition w-9 h-9 rounded-xl flex items-center justify-center shrink-0" title="Ajustes del horario">
+          <button id="btn-schedule-settings" onclick="abrirModal('modal-ajustes-horario')" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition rounded-xl" title="Ajustes del horario">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2869,17 +2922,17 @@ function renderApp() {
     </section>
 
     <!-- RESUMEN DE ACTIVIDADES -->
-    <section id="panel-actividades" class="bg-[#181818] border border-zinc-800 rounded-3xl p-6 animate-in">
-      <div class="flex items-center justify-between gap-2 flex-wrap mb-6">
-        <div class="flex items-center gap-3">
-          <button type="button" onclick="togglePanelBody('panel-actividades-body','icon-panel-actividades')" title="Ocultar/mostrar panel" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl w-9 h-9 flex items-center justify-center transition">
+    <section id="panel-actividades" class="dashboard-panel bg-[#181818] border border-zinc-800 rounded-3xl animate-in">
+      <div class="panel-header">
+        <div class="panel-header-title">
+          <button type="button" onclick="togglePanelBody('panel-actividades-body','icon-panel-actividades')" title="Ocultar/mostrar panel" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition">
             <svg id="icon-panel-actividades" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-300 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9l6 6 6-6"></path>
             </svg>
           </button>
-          <h3 class="text-xl font-bold">Resumen de Actividades</h3>
+          <h3 class="panel-header-heading panel-header-heading--sm">Resumen de Actividades</h3>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="panel-header-actions">
           <button onclick="abrirModal('modal-actividad')" class="bg-blue-600 hover:bg-blue-500 transition px-4 py-2 rounded-xl text-sm font-medium">+ Nueva</button>
           <button onclick="abrirModal('modal-historial')" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition px-4 py-2 rounded-xl text-sm font-medium">Historial</button>
         </div>
@@ -2904,21 +2957,21 @@ function renderApp() {
     </section>
 
     <!-- CALENDARIO -->
-    <section id="panel-calendario" class="bg-[#181818] border border-zinc-800 rounded-3xl p-6 animate-in">
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-3">
-          <button type="button" onclick="togglePanelBody('panel-calendario-body','icon-panel-calendario')" title="Ocultar/mostrar panel" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl w-9 h-9 flex items-center justify-center transition">
+    <section id="panel-calendario" class="dashboard-panel bg-[#181818] border border-zinc-800 rounded-3xl animate-in">
+      <div class="panel-header panel-header--calendar">
+        <div class="panel-header-title">
+          <button type="button" onclick="togglePanelBody('panel-calendario-body','icon-panel-calendario')" title="Ocultar/mostrar panel" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition">
             <svg id="icon-panel-calendario" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-300 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M6 9l6 6 6-6"></path>
             </svg>
           </button>
-          <h2 class="text-2xl font-bold">Calendario del Semestre</h2>
+          <h2 class="panel-header-heading">Calendario del Semestre</h2>
         </div>
-        <div class="flex items-center gap-2 shrink-0">
+        <div class="panel-header-actions panel-header-actions--calendar">
           <button onclick="prevMonth()" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition px-3.5 py-2 rounded-xl text-sm font-medium">←</button>
-          <span id="cal-title" class="font-semibold text-lg w-40 text-center"></span>
+          <span id="cal-title" class="panel-cal-title font-semibold text-lg text-center"></span>
           <button onclick="nextMonth()" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition px-3.5 py-2 rounded-xl text-sm font-medium">→</button>
-          <button id="btn-calendar-settings" onclick="abrirModal('modal-ajustes-calendario')" class="bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition w-9 h-9 rounded-xl flex items-center justify-center shrink-0" title="Ajustes del calendario">
+          <button id="btn-calendar-settings" onclick="abrirModal('modal-ajustes-calendario')" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition rounded-xl flex items-center justify-center" title="Ajustes del calendario">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -2978,9 +3031,13 @@ function initEmojiPicker() {
         cerrarEmojiPicker();
       }
       const typesPanel = document.getElementById('pop-tipos-panel');
+      const typesBackdrop = document.getElementById('pop-tipos-backdrop');
       const typesTrigger = document.getElementById('btn-tipos-trigger');
       if (typesPanel && !typesPanel.classList.contains('hidden') && e.target !== typesTrigger && !typesTrigger.contains(e.target) && !typesPanel.contains(e.target)) {
-        typesPanel.classList.add('hidden');
+        cerrarPopTipos();
+      }
+      if (typesBackdrop && !typesBackdrop.classList.contains('hidden') && e.target === typesBackdrop) {
+        cerrarPopTipos();
       }
     });
   }

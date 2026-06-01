@@ -8,7 +8,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
   <!-- Cropper CSS y JS ELIMINADOS -->
 </head>
 <body class="bg-[#111111] text-white min-h-screen font-sans">
@@ -120,31 +119,13 @@
           <input id="act-fecha" type="date" class="w-full bg-[#2a2a2a] border border-zinc-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 transition text-sm" />
         </div>
 
-        <!-- Tipos de Actividad (Multi-select Popover) -->
-        <div class="space-y-1.5 relative">
+        <!-- Tipos de Actividad -->
+        <div class="space-y-1.5">
           <label class="text-xs text-zinc-400 font-medium">Tipo(s) de Actividad <span class="text-red-500">*</span></label>
           <button type="button" onclick="abrirPopTipos(event)" id="btn-tipos-trigger" class="w-full bg-[#2a2a2a] border border-zinc-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 transition text-sm flex items-center justify-between">
             <span id="txt-tipos-selected" class="truncate text-zinc-400">Seleccionar tipos...</span>
             <span class="text-zinc-500 text-xs">▼</span>
           </button>
-
-          <!-- Floating Popover Panel for Types Selection -->
-          <div id="pop-tipos-panel" onclick="event.stopPropagation()" class="hidden absolute left-0 right-0 md:left-[103%] md:right-auto md:-top-40 md:w-80 w-full mt-1 md:mt-0 bg-[#1e1e1e] border border-zinc-700 rounded-2xl p-4 shadow-2xl z-50 space-y-3 animate-in">
-            <div class="flex items-start justify-between gap-3">
-              <h4 class="text-xs font-bold text-zinc-350 tracking-wide uppercase">Selecciona los tipos</h4>
-              <button type="button" onclick="cerrarPopTipos()" class="text-zinc-400 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold">✕</button>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2" id="pop-tipos-grid"></div>
-
-            <!-- Agregar Tipo Personalizado -->
-            <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800">
-              <input id="act-tipo-custom-input" type="text" placeholder="Otro tipo (ej: 🎨 Quiz)" class="flex-1 bg-[#2a2a2a] border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition" />
-              <button type="button" onclick="event.stopPropagation(); agregarTipoPersonalizado()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-350 rounded-xl text-xs font-bold transition border border-zinc-700">
-                ＋
-              </button>
-            </div>
-          </div>
         </div>
 
         <!-- Importancia -->
@@ -168,6 +149,29 @@
         <div class="flex gap-3 pt-3">
           <button onclick="cerrarModal('modal-actividad')" class="flex-1 bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white transition rounded-xl py-2.5 font-medium text-sm">Cancelar</button>
           <button id="modal-actividad-btn" onclick="agregarActividad()" class="flex-1 bg-blue-600 hover:bg-blue-500 transition rounded-xl py-2.5 font-medium text-white text-sm">Agregar</button>
+        </div>
+      </div>
+
+      <div id="pop-tipos-backdrop" class="pop-tipos-backdrop hidden" onclick="cerrarPopTipos()"></div>
+      <div id="pop-tipos-panel" onclick="event.stopPropagation()" class="pop-tipos-panel hidden bg-[#1e1e1e] border border-zinc-700 shadow-2xl animate-in">
+        <div class="pop-tipos-panel-header flex items-start justify-between gap-3 shrink-0">
+          <h4 class="text-sm font-bold text-zinc-200 tracking-wide">Selecciona los tipos</h4>
+          <button type="button" onclick="cerrarPopTipos()" class="text-zinc-400 hover:text-white bg-zinc-900/90 hover:bg-zinc-800 w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold">✕</button>
+        </div>
+
+        <div class="pop-tipos-panel-body">
+          <div class="grid grid-cols-2 gap-2" id="pop-tipos-grid"></div>
+
+          <div class="flex items-center gap-1.5 pt-3 mt-3 border-t border-zinc-800">
+            <input id="act-tipo-custom-input" type="text" placeholder="Otro tipo (ej: 🎨 Quiz)" class="flex-1 bg-[#2a2a2a] border border-zinc-700 rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition" />
+            <button type="button" onclick="event.stopPropagation(); agregarTipoPersonalizado()" class="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-350 rounded-xl text-sm font-bold transition border border-zinc-700">
+              ＋
+            </button>
+          </div>
+        </div>
+
+        <div class="pop-tipos-panel-footer shrink-0 pt-3 border-t border-zinc-800">
+          <button type="button" onclick="guardarTiposSeleccionados(event)" class="w-full bg-blue-600 hover:bg-blue-500 transition rounded-xl py-2.5 font-semibold text-white text-sm">Listo</button>
         </div>
       </div>
     </div>
@@ -479,41 +483,42 @@
 
     <!-- MODAL: Ajustes de Horario Semanal -->
     <div id="modal-ajustes-horario" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-[#1e1e1e] border border-zinc-700 rounded-3xl p-6 w-full max-w-2xl space-y-4 shadow-2xl modal-box max-h-[90vh] overflow-y-auto animate-in">
-        <h3 class="text-xl font-bold flex items-center gap-2"><span>⚙️</span> Ajustes de Horario</h3>
+      <div class="bg-[#1e1e1e] border border-zinc-700 rounded-3xl p-6 w-full max-w-2xl space-y-4 shadow-2xl modal-box modal-box--schedule-settings max-h-[90vh] overflow-y-auto overflow-x-hidden animate-in">
+        <h3 class="text-xl font-bold flex items-center gap-2 shrink-0"><span>⚙️</span> Ajustes de Horario</h3>
 
-        <div class="grid grid-cols-2 gap-6 pt-1">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1 schedule-settings-grid min-w-0">
           <!-- Días del Horario -->
           <div class="space-y-2 min-w-0">
             <label class="text-xs text-zinc-400 font-bold uppercase tracking-wider pl-1">Días del Horario</label>
-            <div id="schedule-days-checkboxes" class="flex flex-col gap-2 max-h-[400px] overflow-y-auto"></div>
+            <div id="schedule-days-checkboxes" class="flex flex-col gap-2 max-h-[400px] md:max-h-[400px] overflow-y-auto"></div>
           </div>
 
           <!-- Propiedades Visibles -->
           <div class="space-y-2 min-w-0">
             <label class="text-xs text-zinc-400 font-bold uppercase tracking-wider pl-1">Propiedades Visibles</label>
-            <div id="schedule-properties-container" class="space-y-2 max-h-[300px] overflow-y-auto"></div>
+            <div id="schedule-properties-container" class="space-y-2 max-h-[300px] md:max-h-[300px] overflow-y-auto"></div>
 
             <!-- Agregar Propiedad Personalizada -->
-            <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800 mt-2">
-              <input id="schedule-prop-custom-input" type="text" placeholder="Nueva propiedad (ej: 🔧 Sala)" class="flex-1 bg-[#2a2a2a] border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition" />
-              <button type="button" onclick="agregarPropiedadPersonalizada()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-350 rounded-xl text-xs font-bold transition border border-zinc-700">
+            <div class="flex items-center gap-1.5 pt-2 border-t border-zinc-800 mt-2 min-w-0">
+              <input id="schedule-prop-custom-input" type="text" placeholder="Nueva propiedad (ej: 🔧 Sala)" class="flex-1 min-w-0 bg-[#2a2a2a] border border-zinc-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 transition" />
+              <button type="button" onclick="agregarPropiedadPersonalizada()" class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-350 rounded-xl text-xs font-bold transition border border-zinc-700 shrink-0">
                 ＋
               </button>
             </div>
           </div>
         </div>
 
-        <div class="flex gap-3 pt-4 border-t border-zinc-800">
-          <button onclick="cerrarModal('modal-ajustes-horario')" class="flex-1 bg-zinc-700 hover:bg-zinc-600 transition rounded-xl py-2.5 font-medium text-white">Cancelar</button>
-          <button onclick="cerrarModal('modal-ajustes-horario')" class="flex-1 bg-blue-600 hover:bg-blue-500 transition rounded-xl py-2.5 font-medium text-white">Listo</button>
+        <div class="flex gap-3 pt-4 border-t border-zinc-800 schedule-settings-footer shrink-0">
+          <button onclick="cerrarModal('modal-ajustes-horario')" class="flex-1 min-w-0 bg-zinc-700 hover:bg-zinc-600 transition rounded-xl py-2.5 font-medium text-white text-sm">Cancelar</button>
+          <button onclick="cerrarModal('modal-ajustes-horario')" class="flex-1 min-w-0 bg-blue-600 hover:bg-blue-500 transition rounded-xl py-2.5 font-medium text-white text-sm">Listo</button>
         </div>
       </div>
     </div>
 
   </div><!-- end #dashboard-shell -->
 
-  <script src="app.js?v=20260521"></script>
+  <link rel="stylesheet" href="style.css?v=20260527h" />
+  <script src="app.js?v=20260527i"></script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
