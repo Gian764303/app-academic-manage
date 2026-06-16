@@ -12,7 +12,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap"
     rel="stylesheet" />
-  <link rel="stylesheet" href="book.css?v=25" />
+  <link rel="stylesheet" href="book.css?v=31" />
 </head>
 
 <body>
@@ -42,6 +42,17 @@
         <nav class="courses-list book-sidebar-list" id="courses-list"></nav>
       </aside>
 
+      <div
+        class="book-sidebar-resizer"
+        id="book-hub-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Redimensionar columnas"
+        title="Arrastrar para redimensionar"
+      >
+        <span class="book-sidebar-resizer-grip" aria-hidden="true">&lt;-&gt;</span>
+      </div>
+
       <aside class="book-sidebar" id="book-sidebar" aria-label="Páginas del curso">
         <div class="book-sidebar-header">
           <span class="book-sidebar-title">Páginas</span>
@@ -49,6 +60,17 @@
         </div>
         <nav class="book-sidebar-list" id="book-pages-list"></nav>
       </aside>
+
+      <div
+        class="book-sidebar-resizer"
+        id="book-pages-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Redimensionar páginas"
+        title="Arrastrar para redimensionar"
+      >
+        <span class="book-sidebar-resizer-grip" aria-hidden="true">&lt;-&gt;</span>
+      </div>
 
       <div class="book-content">
         <div class="headless-toolbar headless-toolbar--combined" id="headless-toolbar-main" aria-label="Barra de formato">
@@ -128,7 +150,7 @@
     <button type="button" data-action="delete" role="menuitem">Eliminar</button>
   </div>
 
-  <script type="module" src="book.js?v=25"></script>
+  <script type="module" src="book.js?v=29"></script>
 </body>
 
 </html>

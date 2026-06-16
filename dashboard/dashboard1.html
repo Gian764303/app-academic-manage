@@ -4,201 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Student Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../style.css?v=20260527e">
   <style>
-    /* ── Reset & Base ── */
-    *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; }
-    * { font-family: 'Inter', sans-serif; }
-
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #1a1a1a; }
-    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 999px; }
-
-    body {
-      background: #111111;
-      color: #fff;
-      min-height: 100vh;
-      padding: 1.5rem 1rem 4rem;
-    }
-
-    /* ── Layout ── */
-    .app {
-      max-width: 80rem;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
-    }
-
-    /* ── Animations ── */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(16px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes shimmer {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(12px) scale(0.97); }
       to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .animate-in { animation: fadeIn 0.4s ease both; }
-
-    /* ── HERO ── */
-    .hero {
-      position: relative;
-      border-radius: 1.5rem;
-      border: 1px solid #27272a;
-      overflow: hidden;
-      animation: fadeIn 0.5s ease both;
-    }
-
-    .hero-gradient {
-      height: 14rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 40%, #1e1b4b 100%);
-      background-size: 200% 200%;
-      animation: shimmer 6s ease infinite;
-    }
-
-    .hero-content {
-      text-align: center;
-      position: relative;
-      z-index: 10;
-      padding: 1.5rem;
-      border-radius: 1rem;
-    }
-
-    .hero-icon { font-size: 4.5rem; line-height: 1; display: block; }
-
-    .hero-title {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 800;
-      letter-spacing: -0.025em;
-      margin-top: 0.75rem;
-    }
-
-    .hero-subtitle {
-      color: #a5b4fc;
-      font-size: 0.875rem;
-      margin-top: 0.25rem;
-    }
-
-    /* ── CURSOS SECTION ── */
-    .panel {
-      background: #181818;
-      border: 1px solid #27272a;
-      border-radius: 1.5rem;
-      padding: 1.5rem;
-      animation: fadeIn 0.5s 0.1s ease both;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    .panel-header-left {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .panel-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-
-    .panel-header-right {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.75rem;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-      text-decoration: none;
-      border: none;
-      outline: none;
-    }
-    .btn-primary {
-      background: #2563eb;
-      color: #fff;
-      padding: 0.5rem 1rem;
-    }
-    .btn-primary:hover { background: #3b82f6; }
-
-    .btn-secondary {
-      background: #27272a;
-      color: #d4d4d8;
-      border: 1px solid #3f3f46;
-      padding: 0.5rem 1rem;
-    }
-    .btn-secondary:hover { background: #3f3f46; color: #fff; }
-
-    .btn-icon {
-      background: #27272a;
-      border: 1px solid #3f3f46;
-      color: #d4d4d8;
-      width: 2.25rem;
-      height: 2.25rem;
-      padding: 0;
-    }
-    .btn-icon:hover { background: #3f3f46; color: #fff; }
-
-    .btn-toggle {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: #27272a;
-      border: 1px solid #3f3f46;
-      color: #d4d4d8;
-      width: 2.25rem;
-      height: 2.25rem;
-      padding: 0;
-      border-radius: 0.75rem;
-      cursor: pointer;
-      line-height: 0;
-    }
-
-    .btn-toggle svg {
-      display: block;
-      flex-shrink: 0;
-      transform: translateY(1px);
-    }
-
-    /* ── Course Grid ── */
-    .courses-grid {
-      display: grid;
-      grid-template-columns: repeat(1, 1fr);
-      gap: 1.25rem;
-    }
-
-    @media (min-width: 640px)  { .courses-grid { grid-template-columns: repeat(2, 1fr); } }
-    @media (min-width: 768px)  { .courses-grid { grid-template-columns: repeat(3, 1fr); } }
-    @media (min-width: 1024px) { .courses-grid { grid-template-columns: repeat(4, 1fr); } }
-
-    /* ── Course Card ── */
-    .course-card {
+    .preview-course-card {
       background: #232323;
       border: 1px solid #3f3f46;
       border-radius: 1rem;
@@ -210,23 +26,23 @@
       transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
       animation: cardIn 0.4s ease both;
     }
-    .course-card:hover {
+
+    .preview-course-card:hover {
       border-color: #71717a;
       transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
     }
 
-    /* stagger cards */
-    .course-card:nth-child(1) { animation-delay: 0.05s; }
-    .course-card:nth-child(2) { animation-delay: 0.10s; }
-    .course-card:nth-child(3) { animation-delay: 0.15s; }
-    .course-card:nth-child(4) { animation-delay: 0.20s; }
-    .course-card:nth-child(5) { animation-delay: 0.25s; }
-    .course-card:nth-child(6) { animation-delay: 0.30s; }
-    .course-card:nth-child(7) { animation-delay: 0.35s; }
-    .course-card:nth-child(8) { animation-delay: 0.40s; }
+    .preview-course-card:nth-child(1) { animation-delay: 0.05s; }
+    .preview-course-card:nth-child(2) { animation-delay: 0.10s; }
+    .preview-course-card:nth-child(3) { animation-delay: 0.15s; }
+    .preview-course-card:nth-child(4) { animation-delay: 0.20s; }
+    .preview-course-card:nth-child(5) { animation-delay: 0.25s; }
+    .preview-course-card:nth-child(6) { animation-delay: 0.30s; }
+    .preview-course-card:nth-child(7) { animation-delay: 0.35s; }
+    .preview-course-card:nth-child(8) { animation-delay: 0.40s; }
 
-    .course-thumb {
+    .preview-course-thumb {
       height: 7rem;
       display: flex;
       align-items: center;
@@ -236,26 +52,15 @@
       overflow: hidden;
     }
 
-    /* Subtle overlay for depth */
-    .course-thumb::after {
+    .preview-course-thumb::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.35) 100%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.35) 100%);
       pointer-events: none;
     }
 
-    .course-body { padding: 1rem; }
-
-    .course-name {
-      font-weight: 600;
-      font-size: 0.875rem;
-      letter-spacing: 0.025em;
-      color: #e4e4e7;
-    }
-
-    /* Hover action buttons overlay */
-    .card-actions {
+    .preview-card-actions {
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
@@ -265,11 +70,12 @@
       transition: opacity 0.2s ease;
       z-index: 10;
     }
-    .course-card:hover .card-actions { opacity: 1; }
 
-    .card-action-btn {
-      background: rgba(0,0,0,0.65);
-      border: 1px solid rgba(63,63,70,0.6);
+    .preview-course-card:hover .preview-card-actions { opacity: 1; }
+
+    .preview-card-action-btn {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(63, 63, 70, 0.6);
       color: #d4d4d8;
       border-radius: 0.5rem;
       width: 1.75rem;
@@ -279,192 +85,205 @@
       justify-content: center;
       font-size: 0.75rem;
       font-weight: 700;
-      cursor: pointer;
-      transition: background 0.15s;
     }
-    .card-action-btn:hover { background: #27272a; }
 
-    /* ── SVG icons ── */
-    svg { display: block; }
+    @media (max-width: 639px) {
+      #courses-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
 
+      #courses-grid .preview-course-card:nth-child(n+3) {
+        display: none !important;
+      }
+
+      .preview-course-thumb {
+        height: 5.5rem;
+        font-size: 2rem;
+      }
+
+      .preview-course-card .p-4 {
+        padding: 0.75rem 1rem !important;
+      }
+
+      .preview-course-card p {
+        font-size: 0.8125rem !important;
+        line-height: 1.35;
+        white-space: normal;
+      }
+
+      .preview-card-actions {
+        display: none;
+      }
+    }
   </style>
 </head>
-<body>
+<body class="bg-[#111111] text-white min-h-screen font-sans">
 
-  <div class="app">
+  <div id="app" class="p-4 md:p-6 max-w-7xl mx-auto space-y-8 pb-16">
 
-    <!-- ══════════════ HERO ══════════════ -->
-    <div class="hero">
-      <div class="hero-gradient">
-        <div class="hero-content">
-          <span class="hero-icon">🎓</span>
-          <h1 class="hero-title">Escuela</h1>
-          <p class="hero-subtitle">Dashboard estudiantil · Semestre 2026</p>
+    <div class="relative rounded-3xl border border-zinc-800 animate-in">
+      <div class="hero-gradient h-56 flex items-center justify-center rounded-3xl">
+        <div class="text-center space-y-3 relative z-10 p-6 rounded-2xl">
+          <div class="text-7xl">🎓</div>
+          <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight">Escuela</h1>
+          <p class="text-indigo-300 text-sm">Dashboard estudiantil · Semestre 2026</p>
         </div>
       </div>
     </div>
 
-    <!-- ══════════════ CURSOS ══════════════ -->
-    <section class="panel">
-
+    <section id="panel-cursos" class="dashboard-panel bg-[#181818] border border-zinc-800 rounded-3xl animate-in">
       <div class="panel-header">
-        <div class="panel-header-left">
-          <button class="btn-toggle" title="Ocultar/mostrar panel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 9l6 6 6-6"/>
+        <div class="panel-header-title">
+          <button type="button" title="Ocultar/mostrar panel" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-750 border border-zinc-700 text-zinc-350 hover:text-white rounded-xl transition">
+            <svg id="icon-panel-cursos" xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-zinc-300 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"></path>
             </svg>
           </button>
-          <h2 class="panel-title">Cursos</h2>
+          <h2 class="panel-header-heading">Cursos</h2>
         </div>
-
-        <div class="panel-header-right">
-          <button class="btn btn-primary">+ Nuevo</button>
-          <button class="btn btn-secondary">Ver cursos</button>
-          <button class="btn btn-icon" title="Todos los cuadernos">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+        <div class="panel-header-actions">
+          <button type="button" class="bg-blue-600 hover:bg-blue-500 transition px-4 py-2 rounded-xl text-sm font-medium">+ Nuevo</button>
+          <button type="button" class="bg-zinc-800 hover:bg-zinc-775 border border-zinc-700 text-zinc-350 hover:text-white transition px-4 py-2 rounded-xl text-sm font-medium">Ver cursos</button>
+          <button type="button" title="Todos los cursos" class="panel-toggle-btn bg-zinc-800 hover:bg-zinc-775 border border-zinc-700 text-zinc-350 hover:text-white transition rounded-xl">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-              <path d="M8 7h8"/><path d="M8 11h6"/>
+              <path d="M8 7h8"/>
+              <path d="M8 11h6"/>
             </svg>
           </button>
         </div>
       </div>
 
-      <div class="courses-grid">
+      <div id="panel-cursos-body">
+        <div id="courses-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
 
-        <!-- 1 · MATEMATICA -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#ef4444;">📚</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">📚 MATEMATICA — A</p>
+            </div>
           </div>
-          <div class="course-thumb" style="background:#ef4444;">📚</div>
-          <div class="course-body">
-            <p class="course-name">📚 MATEMATICA — A</p>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#84cc16; color:#000;">🏛️</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">🏛️ HISTORIA — B</p>
+            </div>
           </div>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#14b8a6;">🚀</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">🚀 FISICA — C</p>
+            </div>
+          </div>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#f97316;">🔬</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">🔬 QUIMICA — B</p>
+            </div>
+          </div>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#ec4899;">🎨</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">🎨 ARTE — A</p>
+            </div>
+          </div>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#6366f1;">💡</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">💡 CIENCIAS — F</p>
+            </div>
+          </div>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#3b82f6;">🧬</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">🧬 BIOLOGIA — C</p>
+            </div>
+          </div>
+
+          <div class="preview-course-card">
+            <div class="preview-card-actions">
+              <span class="preview-card-action-btn">#</span>
+              <span class="preview-card-action-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
+                </svg>
+              </span>
+            </div>
+            <div class="preview-course-thumb" style="background:#8b5cf6;">📝</div>
+            <div class="p-4">
+              <p class="font-semibold text-sm tracking-wide text-zinc-200">📝 LENGUAJE</p>
+            </div>
+          </div>
+
         </div>
-
-        <!-- 2 · HISTORIA -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#84cc16; color:#000;">🏛️</div>
-          <div class="course-body">
-            <p class="course-name">🏛️ HISTORIA — B</p>
-          </div>
-        </div>
-
-        <!-- 3 · FISICA -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#14b8a6;">🚀</div>
-          <div class="course-body">
-            <p class="course-name">🚀 FISICA — C</p>
-          </div>
-        </div>
-
-        <!-- 4 · QUIMICA -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#f97316;">🔬</div>
-          <div class="course-body">
-            <p class="course-name">🔬 QUIMICA — B</p>
-          </div>
-        </div>
-
-        <!-- 5 · ARTE -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#ec4899;">🎨</div>
-          <div class="course-body">
-            <p class="course-name">🎨 ARTE — A</p>
-          </div>
-        </div>
-
-        <!-- 6 · CIENCIAS -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#6366f1;">💡</div>
-          <div class="course-body">
-            <p class="course-name">💡 CIENCIAS — F</p>
-          </div>
-        </div>
-
-        <!-- 7 · BIOLOGIA -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#3b82f6;">🧬</div>
-          <div class="course-body">
-            <p class="course-name">🧬 BIOLOGIA — C</p>
-          </div>
-        </div>
-
-        <!-- 8 · LENGUAJE -->
-        <div class="course-card">
-          <div class="card-actions">
-            <span class="card-action-btn">#</span>
-            <span class="card-action-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M15.232 5.232a2.5 2.5 0 013.536 3.536L7.5 20.036H3v-4.5L15.232 5.232z"/>
-              </svg>
-            </span>
-          </div>
-          <div class="course-thumb" style="background:#8b5cf6;">📝</div>
-          <div class="course-body">
-            <p class="course-name">📝 LENGUAJE</p>
-          </div>
-        </div>
-
-      </div><!-- /.courses-grid -->
-
+      </div>
     </section>
 
-  </div><!-- /.app -->
+  </div>
 
 </body>
 </html>
