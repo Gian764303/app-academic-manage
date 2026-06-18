@@ -13,6 +13,8 @@
     "firebase-tools": "^13.0.0"
   },
   "dependencies": {
-    "cloudinary": "^2.10.0"
+    "cloudinary": "^2.10.0",
+    "highlight.js": "^11.11.1",
+    "lowlight": "^3.3.0"
   }
 }

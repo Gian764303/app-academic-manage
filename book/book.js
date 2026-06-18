@@ -11,11 +11,20 @@ import TableRow from 'https://esm.sh/@tiptap/extension-table-row@2.11.5';
 import TableCell from 'https://esm.sh/@tiptap/extension-table-cell@2.11.5';
 import TableHeader from 'https://esm.sh/@tiptap/extension-table-header@2.11.5';
 import Placeholder from 'https://esm.sh/@tiptap/extension-placeholder@2.11.5';
-import { Plugin, PluginKey } from 'https://esm.sh/prosemirror-state@1.4.3';
+import { Plugin, PluginKey } from 'https://esm.sh/@tiptap/pm@2.11.5/state';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { auth } from '../js/firebase-config.js';
 import TextAlign from 'https://esm.sh/@tiptap/extension-text-align@2.11.5';
 import Heading from 'https://esm.sh/@tiptap/extension-heading@2.11.5';
+import CodeBlockLowlight from 'https://esm.sh/@tiptap/extension-code-block-lowlight@2.11.5';
+import {
+  lowlight,
+  scheduleCodeBlockLanguageDetection,
+  detectCodeBlockLanguages,
+  flushCodeBlockLanguageDetection,
+  createCodeBlockLanguagePlugin,
+} from './highlight-setup.js?v=9';
+import { ClickToWrite, setSkipTrailingInsert } from './click-to-write.js?v=4';
 import { fetchBook, saveBook, subscribeBook } from '../js/book-service.js';
 import { fetchUserDashboard, saveUserDashboard } from '../js/data-service.js';
 import {
@@ -81,6 +90,8 @@ let currentUid = null;
 let saveTimer = null;
 let unsubBook = null;
 let applyingRemote = false;
+let saveInFlight = false;
+let lastLocalSaveAt = 0;
 let lastSavedJson = '';
 let pendingSaveJson = '';
 let lastSavedBookJson = '';
@@ -106,10 +117,29 @@ const SLASH_ITEMS = [
 
 const slashPluginKey = new PluginKey('slashCommand');
 
-function setSyncStatus(mode, text) {
+const SYNC_ICON_SYNC = `<svg class="book-sync-icon book-sync-icon--spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>`;
+
+const SYNC_ICON_CHECK = `<svg class="book-sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>`;
+
+const SYNC_ICON_ERROR = `<svg class="book-sync-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+
+function setSyncStatus(mode, label) {
   if (!els.sync) return;
   els.sync.className = `book-sync ${mode}`;
-  els.sync.textContent = text;
+  if (mode === 'saving') {
+    els.sync.innerHTML = SYNC_ICON_SYNC;
+  } else if (mode === 'error') {
+    els.sync.innerHTML = SYNC_ICON_ERROR;
+  } else {
+    els.sync.innerHTML = SYNC_ICON_CHECK;
+  }
+  const text = label || '';
+  els.sync.setAttribute('aria-label', text);
+  if (text) {
+    els.sync.title = text;
+  } else {
+    els.sync.removeAttribute('title');
+  }
 }
 
 function isOldDefaultContent(content) {
@@ -150,12 +180,34 @@ function createEmptyPageContent() {
   };
 }
 
+function ensureLeadBlocks(content) {
+  if (!content || content.type !== 'doc') return createEmptyPageContent();
+  const blocks = [...(content.content || [])];
+  if (!blocks.length || blocks[0]?.type !== 'heading') {
+    blocks.unshift({ type: 'heading', attrs: { level: 2 } });
+  }
+  if (blocks.length < 2 || blocks[1]?.type !== 'paragraph') {
+    blocks.splice(1, 0, { type: 'paragraph' });
+  }
+  return { type: 'doc', content: blocks };
+}
+
 function createPage(title, content = null) {
   return {
     id: crypto.randomUUID(),
     title,
     content: content && !isOldDefaultContent(content) ? content : createEmptyPageContent(),
   };
+}
+
+function getRemoteUpdatedAtMs(data) {
+  const ts = data?.updatedAt;
+  if (!ts) return 0;
+  if (typeof ts.toMillis === 'function') return ts.toMillis();
+  if (typeof ts.seconds === 'number') {
+    return ts.seconds * 1000 + Math.floor((ts.nanoseconds || 0) / 1e6);
+  }
+  return 0;
 }
 
 function normalizeBookData(data) {
@@ -190,6 +242,7 @@ function persistCurrentPage() {
   if (!editor || !bookState.activePageId) return;
   const page = bookState.pages.find((p) => p.id === bookState.activePageId);
   if (!page) return;
+  if (!applyingRemote) flushCodeBlockLanguageDetection(editor);
   page.content = editor.getJSON();
 }
 
@@ -219,6 +272,18 @@ function getBookPayload() {
 
 function getBookStateJson() {
   return JSON.stringify({ pages: bookState.pages, activePageId: bookState.activePageId });
+}
+
+function getLocalBookJson() {
+  if (!editor) return getBookStateJson();
+  const activeId = bookState.activePageId;
+  const liveContent = editor.getJSON();
+  return JSON.stringify({
+    pages: bookState.pages.map((p) =>
+      p.id === activeId ? { ...p, content: liveContent } : p
+    ),
+    activePageId: activeId,
+  });
 }
 
 function clearRowMenuOpen() {
@@ -315,10 +380,11 @@ function deletePage(pageId) {
     const next = bookState.pages[Math.min(idx, bookState.pages.length - 1)];
     bookState.activePageId = next.id;
     applyingRemote = true;
-    editor.commands.setContent(next.content, false);
-    lastSavedJson = JSON.stringify(next.content);
+    editor.commands.setContent(ensureLeadBlocks(next.content), false);
+    lastSavedJson = getEditorContentJson();
     applyingRemote = false;
     syncHeadlessToolbar(editor);
+    refreshCodeBlockHighlight(editor);
   }
   renderPagesList();
   scheduleSave();
@@ -418,7 +484,7 @@ function renderPagesList() {
     label.title = p.title;
     const labelText = document.createElement('span');
     labelText.className = 'book-page-item-text';
-    labelText.textContent = p.title;
+    labelText.textContent = p.title || 'Sin título';
     label.append(labelText);
     label.addEventListener('click', () => switchPage(p.id));
     label.addEventListener('dblclick', (e) => {
@@ -447,6 +513,11 @@ function renderPagesList() {
   });
 }
 
+function refreshCodeBlockHighlight(ed = editor) {
+  if (!ed || ed.isDestroyed) return;
+  detectCodeBlockLanguages(ed);
+}
+
 function switchPage(pageId) {
   if (!pageId || pageId === bookState.activePageId || !editor) return;
   persistCurrentPage();
@@ -454,11 +525,12 @@ function switchPage(pageId) {
   const page = getActivePage();
   if (!page) return;
   applyingRemote = true;
-  editor.commands.setContent(page.content, false);
-  lastSavedJson = JSON.stringify(page.content);
+  editor.commands.setContent(ensureLeadBlocks(page.content), false);
+  lastSavedJson = getEditorContentJson();
   applyingRemote = false;
   renderPagesList();
   syncHeadlessToolbar(editor);
+  refreshCodeBlockHighlight(editor);
   editor.commands.focus('end');
   scheduleSave();
   closeMobileSidebars();
@@ -739,21 +811,26 @@ function initCourseMenu() {
 }
 
 async function saveNow() {
-  if (!editor || !currentUid || !courseId || applyingRemote) return;
+  if (!editor || !currentUid || !courseId || applyingRemote || saveInFlight) return;
   clearTimeout(saveTimer);
   persistCurrentPage();
   const bookJson = getBookStateJson();
   if (!bookJson || bookJson === lastSavedBookJson) return;
+  saveInFlight = true;
   try {
     await saveBook(currentUid, courseId, getBookPayload());
-    lastSavedBookJson = bookJson;
+    persistCurrentPage();
+    lastSavedBookJson = getBookStateJson();
     lastSavedJson = getEditorContentJson();
+    lastLocalSaveAt = Date.now();
     pendingSaveBookJson = '';
     pendingSaveJson = '';
     setSyncStatus('saved', 'Guardado');
   } catch (err) {
     console.error(err);
     setSyncStatus('error', 'Error al guardar');
+  } finally {
+    saveInFlight = false;
   }
 }
 
@@ -777,14 +854,16 @@ async function switchCourse(newCourseId) {
   }
   const page = getActivePage();
   applyingRemote = true;
-  editor.commands.setContent(page?.content || createEmptyPageContent(), false);
-  lastSavedJson = JSON.stringify(page?.content || {});
+  editor.commands.setContent(ensureLeadBlocks(page?.content || createEmptyPageContent()), false);
+  lastSavedJson = getEditorContentJson();
   lastSavedBookJson = getBookStateJson();
+  lastLocalSaveAt = getRemoteUpdatedAtMs(data) || Date.now();
   applyingRemote = false;
   updateCourseHeader();
   renderCoursesList();
   renderPagesList();
   syncHeadlessToolbar(editor);
+  refreshCodeBlockHighlight(editor);
   editor.commands.focus('end');
   closeMobileSidebars();
   unsubBook = subscribeBook(
@@ -1094,6 +1173,13 @@ function buildSlashPlugin(getEditor) {
   });
 }
 
+const CodeBlockLanguageLabels = Extension.create({
+  name: 'codeBlockLanguageLabels',
+  addProseMirrorPlugins() {
+    return [createCodeBlockLanguagePlugin()];
+  },
+});
+
 const SlashCommand = Extension.create({
   name: 'slashCommand',
   addProseMirrorPlugins() {
@@ -1101,27 +1187,100 @@ const SlashCommand = Extension.create({
   },
 });
 
-const ProtectedTitle = Extension.create({
-  name: 'protectedTitle',
+const PROTECTED_LEAD_META = 'protectedLead';
+
+function docNeedsLeadFix(doc) {
+  const first = doc.firstChild;
+  const second = doc.childCount > 1 ? doc.child(1) : null;
+  return !first || first.type.name !== 'heading' || !second || second.type.name !== 'paragraph';
+}
+
+function fixLeadBlocks(tr, schema) {
+  const heading = schema.nodes.heading;
+  const paragraph = schema.nodes.paragraph;
+  if (!heading || !paragraph) return tr;
+
+  if (tr.doc.childCount === 0) {
+    tr.insert(0, [heading.create({ level: 2 }), paragraph.create()]);
+    tr.setMeta(PROTECTED_LEAD_META, true);
+    return tr;
+  }
+
+  if (tr.doc.firstChild.type.name !== 'heading') {
+    tr.insert(0, heading.create({ level: 2 }));
+    tr.setMeta(PROTECTED_LEAD_META, true);
+  }
+
+  const first = tr.doc.firstChild;
+  if (tr.doc.childCount < 2) {
+    tr.insert(first.nodeSize, paragraph.create());
+    tr.setMeta(PROTECTED_LEAD_META, true);
+    return tr;
+  }
+
+  if (tr.doc.child(1).type.name !== 'paragraph') {
+    tr.insert(first.nodeSize, paragraph.create());
+    tr.setMeta(PROTECTED_LEAD_META, true);
+  }
+
+  return tr;
+}
+
+const ProtectedLead = Extension.create({
+  name: 'protectedLead',
   addProseMirrorPlugins() {
     return [
       new Plugin({
-        key: new PluginKey('protectedTitle'),
+        key: new PluginKey('protectedLead'),
+        appendTransaction(transactions, _oldState, newState) {
+          if (applyingRemote) return;
+          if (!transactions.some((t) => t.docChanged)) return;
+          if (transactions.some((t) => t.getMeta(PROTECTED_LEAD_META))) return;
+
+          if (!docNeedsLeadFix(newState.doc)) return;
+
+          const tr = fixLeadBlocks(newState.tr, newState.schema);
+          return tr.docChanged ? tr : null;
+        },
         props: {
           handleKeyDown(view, event) {
             if (!['Backspace', 'Delete'].includes(event.key)) return false;
 
-            const firstNode = view.state.doc.firstChild;
-            if (!firstNode || firstNode.type.name !== 'heading') return false;
+            const { doc, selection } = view.state;
+            const { from, to } = selection;
+            const first = doc.firstChild;
+            if (!first || first.type.name !== 'heading') return false;
+            const second = doc.childCount > 1 ? doc.child(1) : null;
+            if (!second || second.type.name !== 'paragraph') return false;
 
-            const titleStart = 1;
-            const titleEnd = titleStart + firstNode.nodeSize;
-            const { from, to } = view.state.selection;
+            const titleContentStart = 1;
+            const titleContentEnd = titleContentStart + first.content.size;
+            const leadContentStart = first.nodeSize + 1;
+            const leadContentEnd = leadContentStart + second.content.size;
 
-            if (from >= titleEnd || to <= titleStart) return false;
+            if (event.key === 'Backspace') {
+              if (from === to && from === leadContentStart) {
+                event.preventDefault();
+                return true;
+              }
+              if (from === to && from === titleContentStart && first.content.size === 0) {
+                event.preventDefault();
+                return true;
+              }
+            }
 
-            event.preventDefault();
-            return true;
+            if (event.key === 'Delete') {
+              if (from === to && from === titleContentEnd && first.content.size === 0) {
+                event.preventDefault();
+                return true;
+              }
+              if (from === to && from === leadContentEnd && second.content.size === 0) {
+                event.preventDefault();
+                return true;
+              }
+            }
+
+            return false;
           },
         },
       }),
@@ -1135,17 +1294,24 @@ function getEditorContentJson(ed = editor) {
 }
 
 function restoreEditorSelection(ed, selection) {
-  if (!ed || !selection || selection.empty) {
+  if (!ed || !selection) {
     ed?.view.focus();
     return;
   }
   queueMicrotask(() => {
-    ed.view.focus();
+    if (ed.isDestroyed) return;
     const max = ed.state.doc.content.size;
-    const from = Math.min(selection.from, max);
-    const to = Math.min(selection.to, max);
-    if (from <= to) {
-      ed.commands.setTextSelection({ from, to });
+    const from = Math.min(Math.max(0, selection.from), max);
+    const to = Math.min(Math.max(0, selection.to), max);
+    try {
+      if (from === to) {
+        ed.chain().focus().setTextSelection(from).run();
+      } else {
+        ed.chain().focus().setTextSelection({ from, to }).run();
+      }
+    } catch (err) {
+      console.warn('restore selection failed', err);
+      ed.view.focus();
     }
   });
 }
@@ -1153,77 +1319,98 @@ function restoreEditorSelection(ed, selection) {
 function scheduleSave() {
   if (!editor || !currentUid || !courseId || applyingRemote) return;
   clearTimeout(saveTimer);
+  saveTimer = setTimeout(runPendingSave, 700);
+}
+
+async function runPendingSave() {
+  if (!editor || !currentUid || !courseId || applyingRemote) return;
+
+  if (saveInFlight) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(runPendingSave, 200);
+    return;
+  }
+
+  persistCurrentPage();
+  const bookJson = getBookStateJson();
+  if (!bookJson || bookJson === lastSavedBookJson) return;
+
   setSyncStatus('saving', 'Guardando…');
-  saveTimer = setTimeout(async () => {
+  pendingSaveBookJson = bookJson;
+  pendingSaveJson = getEditorContentJson();
+  saveInFlight = true;
+  try {
+    await saveBook(currentUid, courseId, getBookPayload());
     persistCurrentPage();
-    const bookJson = getBookStateJson();
-    if (!bookJson || bookJson === lastSavedBookJson) {
-      setSyncStatus('saved', 'Guardado');
-      return;
+    lastSavedBookJson = getBookStateJson();
+    lastSavedJson = getEditorContentJson();
+    lastLocalSaveAt = Date.now();
+    pendingSaveBookJson = '';
+    pendingSaveJson = '';
+    setSyncStatus('saved', 'Guardado');
+  } catch (err) {
+    console.error(err);
+    pendingSaveBookJson = '';
+    pendingSaveJson = '';
+    setSyncStatus('error', 'Error al guardar');
+  } finally {
+    saveInFlight = false;
+    persistCurrentPage();
+    if (getBookStateJson() !== lastSavedBookJson) {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(runPendingSave, 300);
     }
-    pendingSaveBookJson = bookJson;
-    pendingSaveJson = getEditorContentJson();
-    try {
-      await saveBook(currentUid, courseId, getBookPayload());
-      lastSavedBookJson = bookJson;
-      lastSavedJson = getEditorContentJson();
-      pendingSaveBookJson = '';
-      pendingSaveJson = '';
-      setSyncStatus('saved', 'Guardado');
-    } catch (err) {
-      console.error(err);
-      pendingSaveBookJson = '';
-      pendingSaveJson = '';
-      setSyncStatus('error', 'Error al guardar');
-    }
-  }, 700);
+  }
+}
+
+function parseRemoteBookData(data) {
+  if (!data?.pages?.length) {
+    return normalizeBookData(data);
+  }
+  const pages = data.pages.map((p, i) => ({
+    id: p.id || crypto.randomUUID(),
+    title: p.title || `Página ${i + 1}`,
+    content: ensureLeadBlocks(p.content),
+  }));
+  const activePageId = pages.some((p) => p.id === data.activePageId)
+    ? data.activePageId
+    : pages[0].id;
+  return { pages, activePageId };
+}
+
+function getRemoteBookJson(data) {
+  const { pages, activePageId } = parseRemoteBookData(data);
+  return JSON.stringify({ pages, activePageId });
 }
 
 function applyRemoteBook(data) {
   if (!editor || applyingRemote) return;
 
-  const normalized = normalizeBookData(data);
-  const remoteBookJson = JSON.stringify({
-    pages: normalized.pages,
-    activePageId: normalized.activePageId,
-  });
-  const localBookJson = getBookStateJson();
+  const remoteBookJson = getRemoteBookJson(data);
+  const remoteAt = getRemoteUpdatedAtMs(data);
+  const localBookJson = getLocalBookJson();
+  const currentPageJson = getEditorContentJson();
 
-  if (
-    remoteBookJson === localBookJson ||
-    remoteBookJson === lastSavedBookJson ||
-    remoteBookJson === pendingSaveBookJson
-  ) {
+  // Nunca pisar el editor mientras hay cambios locales o un guardado en curso.
+  if (saveInFlight || currentPageJson !== lastSavedJson) {
     return;
   }
 
-  persistCurrentPage();
-
-  const savedSelection = {
-    from: editor.state.selection.from,
-    to: editor.state.selection.to,
-    empty: editor.state.selection.empty,
-  };
-
-  const prevActiveId = bookState.activePageId;
-  bookState.pages = normalized.pages;
-  bookState.activePageId = normalized.activePageId;
-
-  const activePage = getActivePage();
-  const currentPageJson = getEditorContentJson();
-  const remotePageJson = JSON.stringify(activePage?.content || {});
-
-  applyingRemote = true;
-  if (prevActiveId !== bookState.activePageId || remotePageJson !== currentPageJson) {
-    editor.commands.setContent(activePage?.content || createEmptyPageContent(), false);
-    lastSavedJson = remotePageJson;
+  // Eco confirmado: el remoto coincide con lo último guardado.
+  if (remoteBookJson === lastSavedBookJson) {
+    if (remoteAt) lastLocalSaveAt = Math.max(lastLocalSaveAt, remoteAt);
+    return;
   }
-  applyingRemote = false;
-  lastSavedBookJson = remoteBookJson;
-  renderPagesList();
-  setSyncStatus('saved', 'Sincronizado');
-  syncHeadlessToolbar(editor);
-  restoreEditorSelection(editor, savedSelection);
+
+  // Ya en sync total.
+  if (remoteBookJson === localBookJson) {
+    lastSavedBookJson = remoteBookJson;
+    if (remoteAt) lastLocalSaveAt = Math.max(lastLocalSaveAt, remoteAt);
+    return;
+  }
+
+  // Remoto desactualizado: subir lo local (nunca setContent en vivo).
+  scheduleSave();
 }
 
 
@@ -1298,8 +1485,17 @@ function initHeadlessToolbar(ed) {
   document.getElementById('tb-heading')?.addEventListener('change', (e) => {
     const level = parseInt(e.target.value, 10);
     runToolbarAction(ed, () => {
-      if (level) ed.chain().focus().toggleHeading({ level }).run();
-      else ed.chain().focus().setParagraph().run();
+      if (level) {
+        ed.chain().focus().toggleHeading({ level }).run();
+      } else {
+        const first = ed.state.doc.firstChild;
+        const inTitle = first?.type.name === 'heading' && ed.state.selection.from <= first.nodeSize;
+        if (inTitle) {
+          e.target.value = String(first.attrs.level || 2);
+          return;
+        }
+        ed.chain().focus().setParagraph().run();
+      }
     });
     syncHeadlessToolbar(ed);
   });
@@ -1328,17 +1524,38 @@ function initHeadlessToolbar(ed) {
     }
   });
 }
-function getFirstEmptyParagraphPos(doc) {
-  let found = null;
-  doc.descendants((node, pos) => {
-    if (found !== null) return false;
-    if (node.type.name === 'paragraph' && node.content.size === 0) {
-      found = pos;
-      return false;
+function getLeadParagraphPos(doc) {
+  if (doc.childCount < 2) return null;
+  if (doc.child(1).type.name !== 'paragraph') return null;
+  return doc.child(0).nodeSize;
+}
+
+function docHasBodyContent(doc) {
+  let index = 0;
+  let hasBody = false;
+  doc.forEach((node) => {
+    if (hasBody) return;
+    if (index === 0 && node.type.name === 'heading') {
+      index += 1;
+      return;
     }
-    return undefined;
+    if (index === 1 && node.type.name === 'paragraph') {
+      if (node.content.size > 0) hasBody = true;
+      index += 1;
+      return;
+    }
+    if (node.type.name === 'paragraph') {
+      if (node.content.size > 0) hasBody = true;
+      return;
+    }
+    hasBody = true;
   });
-  return found;
+  return hasBody;
+}
+
+function shouldShowStartWritingPlaceholder(doc, paragraphPos) {
+  if (getLeadParagraphPos(doc) !== paragraphPos) return false;
+  return !docHasBodyContent(doc);
 }
 
 function createEditor(initialContent) {
@@ -1347,9 +1564,12 @@ function createEditor(initialContent) {
     extensions: [
       StarterKit.configure({
         heading: false,
-        codeBlock: {
-          HTMLAttributes: { class: 'code-block-cascadia' },
-        },
+        codeBlock: false,
+      }),
+      CodeBlockLowlight.configure({
+        lowlight,
+        defaultLanguage: null,
+        HTMLAttributes: { class: 'code-block-cascadia' },
       }),
       Heading.configure({
         levels: [1, 2, 3, 4, 5, 6],
@@ -1367,7 +1587,7 @@ function createEditor(initialContent) {
         placeholder: ({ node, pos, editor }) => {
           if (node.type.name === 'heading') return 'Título';
           if (node.type.name === 'paragraph') {
-            if (node.content.size === 0 && getFirstEmptyParagraphPos(editor.state.doc) === pos) {
+            if (node.content.size === 0 && shouldShowStartWritingPlaceholder(editor.state.doc, pos)) {
               return 'Empieza a escribir...';
             }
             return '';
@@ -1379,20 +1599,11 @@ function createEditor(initialContent) {
         emptyNodeClass: 'is-empty',
       }),
       SlashCommand,
-      ProtectedTitle,
+      ProtectedLead,
+      CodeBlockLanguageLabels,
+      ClickToWrite,
     ],
-    content: initialContent || {
-      type: 'doc',
-      content: [
-        {
-          type: 'heading',
-          attrs: { level: 2 },
-        },
-        {
-          type: 'paragraph',
-        },
-      ],
-    },
+    content: ensureLeadBlocks(initialContent),
     editorProps: {
       attributes: {
         class: 'tiptap headless-prose',
@@ -1423,10 +1634,14 @@ function createEditor(initialContent) {
         return false;
       },
     },
-    onCreate: ({ editor: ed }) => syncHeadlessToolbar(ed),
+    onCreate: ({ editor: ed }) => {
+      syncHeadlessToolbar(ed);
+      refreshCodeBlockHighlight(ed);
+    },
     onUpdate: ({ editor: ed }) => {
       syncHeadlessToolbar(ed);
       scheduleSave();
+      if (!applyingRemote) scheduleCodeBlockLanguageDetection(ed);
     },
     onSelectionUpdate: ({ editor: ed }) => syncHeadlessToolbar(ed),
   });
@@ -1496,7 +1711,7 @@ async function bootCoursesHub(uid) {
     const data = await fetchBook(uid, courseId);
     bookState = normalizeBookData(data);
     initial = getActivePage()?.content || null;
-    lastSavedJson = JSON.stringify(initial || {});
+    lastLocalSaveAt = getRemoteUpdatedAtMs(data) || Date.now();
     lastSavedBookJson = getBookStateJson();
   } catch (err) {
     console.error(err);
@@ -1505,6 +1720,9 @@ async function bootCoursesHub(uid) {
   }
 
   createEditor(initial);
+  persistCurrentPage();
+  lastSavedJson = getEditorContentJson();
+  lastSavedBookJson = getBookStateJson();
   initPagesSidebar();
   updateCourseHeader();
 
@@ -1544,7 +1762,7 @@ async function bootBook(uid) {
     const data = await fetchBook(uid, courseId);
     bookState = normalizeBookData(data);
     initial = getActivePage()?.content || null;
-    lastSavedJson = JSON.stringify(initial || {});
+    lastLocalSaveAt = getRemoteUpdatedAtMs(data) || Date.now();
     lastSavedBookJson = getBookStateJson();
   } catch (err) {
     console.error(err);
@@ -1553,6 +1771,9 @@ async function bootBook(uid) {
   }
 
   createEditor(initial);
+  persistCurrentPage();
+  lastSavedJson = getEditorContentJson();
+  lastSavedBookJson = getBookStateJson();
   initPagesSidebar();
 
   if (initialPageId && bookState.pages.some((p) => p.id === initialPageId)) {
@@ -1576,21 +1797,28 @@ async function bootBook(uid) {
 
 function initBook() {
   onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      currentUid = user.uid;
-      await bootBook(user.uid);
-    } else {
-      currentUid = null;
-      if (unsubBook) unsubBook();
-      editor?.destroy();
-      editor = null;
-      editorRef.current = null;
-      showError('No se pudo abrir el cuaderno. Por favor registrate en el dashboard.');
+    try {
+      if (user) {
+        currentUid = user.uid;
+        await bootBook(user.uid);
+      } else {
+        currentUid = null;
+        if (unsubBook) unsubBook();
+        editor?.destroy();
+        editor = null;
+        editorRef.current = null;
+        showError('No se pudo abrir el cuaderno. Por favor registrate en el dashboard.');
+      }
+    } catch (err) {
+      console.error(err);
+      showError('Error al cargar: ' + (err.message || 'desconocido'));
     }
   });
 }
 
 
+
+setSyncStatus('idle', 'Listo');
 
 if (isCoursesHub) {
   initBook();
