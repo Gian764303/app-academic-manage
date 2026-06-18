@@ -23,7 +23,7 @@ import {
   detectCodeBlockLanguages,
   flushCodeBlockLanguageDetection,
   createCodeBlockLanguagePlugin,
-} from './highlight-setup.js?v=9';
+} from './highlight-setup.js?v=11';
 import { ClickToWrite, setSkipTrailingInsert } from './click-to-write.js?v=4';
 import { fetchBook, saveBook, subscribeBook } from '../js/book-service.js';
 import { fetchUserDashboard, saveUserDashboard } from '../js/data-service.js';

@@ -80,6 +80,14 @@ export function buildCodeBlockLanguageDecorations(doc) {
         'data-lang-label': label,
       })
     );
+
+    decorations.push(
+      Decoration.widget(
+        pos,
+        () => createCopyButtonElement(),
+        { side: -1, key: `code-copy-${pos}` }
+      )
+    );
   });
 
   return DecorationSet.create(doc, decorations);
@@ -105,6 +113,73 @@ export function createCodeBlockLanguagePlugin() {
       },
     },
   });
+}
+
+const COPY_BTN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+
+function showCopyFeedback(btn) {
+  btn.classList.add('is-copied');
+  btn.setAttribute('aria-label', 'Copiado');
+  const label = btn.querySelector('.code-block-copy-label');
+  const prev = label?.textContent;
+  if (label) label.textContent = 'Copiado';
+  clearTimeout(btn._copyFeedbackTimer);
+  btn._copyFeedbackTimer = setTimeout(() => {
+    btn.classList.remove('is-copied');
+    btn.setAttribute('aria-label', 'Copiar código');
+    if (label && prev) label.textContent = prev;
+  }, 1500);
+}
+
+async function copyCodeBlockText(text, btn) {
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    showCopyFeedback(btn);
+    return;
+  } catch {
+    /* fallback below */
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showCopyFeedback(btn);
+  } catch {
+    /* ignore */
+  }
+}
+
+function createCopyButtonElement() {
+  const slot = document.createElement('div');
+  slot.className = 'code-block-copy-slot';
+  slot.contentEditable = 'false';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'code-block-copy-btn';
+  btn.setAttribute('aria-label', 'Copiar código');
+  btn.innerHTML = `${COPY_BTN_SVG}<span class="code-block-copy-label">Copiar</span>`;
+
+  btn.addEventListener('mousedown', (e) => e.preventDefault());
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const pre = slot.nextElementSibling;
+    if (!pre || pre.tagName !== 'PRE') return;
+    const code = pre.querySelector('code');
+    const text = code ? code.textContent : pre.textContent;
+    copyCodeBlockText(text, btn);
+  });
+
+  slot.appendChild(btn);
+  return slot;
 }
 
 let detectTimer = null;

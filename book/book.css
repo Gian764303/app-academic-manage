@@ -506,6 +506,7 @@ body.book-sidebar-resizing * {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  gap: 0.35rem;
 }
 
 .book-back {
@@ -868,6 +869,7 @@ body.book-sidebar-resizing * {
 .book-editor .tiptap pre.code-block-labeled {
   position: relative;
   padding-top: 2.25rem;
+  padding-right: 5.5rem;
 }
 
 .book-editor .tiptap pre.code-block-labeled[data-lang-label]::before {
@@ -886,6 +888,64 @@ body.book-sidebar-resizing * {
   line-height: 1;
   z-index: 2;
   user-select: none;
+}
+
+.book-editor .tiptap .code-block-copy-slot {
+  display: block;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  overflow: visible;
+  position: relative;
+  pointer-events: none;
+  user-select: none;
+}
+
+.book-editor .tiptap .code-block-copy-slot .code-block-copy-btn {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  right: 0.65rem;
+  z-index: 3;
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #a1a1aa;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-family: Inter, system-ui, sans-serif;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.book-editor .tiptap .code-block-copy-slot .code-block-copy-btn:hover {
+  color: #e5e7eb;
+  border-color: #52525b;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.book-editor .tiptap .code-block-copy-slot .code-block-copy-btn.is-copied {
+  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.45);
+}
+
+.book-editor .tiptap .code-block-copy-slot .code-block-copy-btn svg {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.book-editor .tiptap .code-block-copy-label {
+  pointer-events: none;
 }
 
 .book-editor .tiptap pre code.hljs,
