@@ -567,6 +567,169 @@ td[data-col]{position:relative;}
   }
 }
 
+/* ── Horario semanal ── */
+.schedule-panel-body {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.schedule-grid {
+  display: grid;
+  gap: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.schedule-day-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.schedule-day-header {
+  border-width: 1px;
+  border-style: solid;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.schedule-empty-day {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 1px solid #27272a;
+  border-radius: 1rem;
+  font-size: 0.8125rem;
+  color: #71717a;
+  font-weight: 500;
+  user-select: none;
+}
+
+.schedule-class-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #232323;
+  border: 1px solid #3f3f46;
+  border-radius: 1rem;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease;
+}
+
+.schedule-class-card:hover {
+  border-color: #71717a;
+}
+
+.schedule-class-card-body {
+  padding: 1rem;
+}
+
+.schedule-class-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-right: 1.75rem;
+  min-width: 0;
+}
+
+.schedule-class-emoji {
+  flex-shrink: 0;
+  line-height: 1.35;
+}
+
+.schedule-class-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.schedule-class-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 1rem 1rem;
+  border-top: 1px solid #27272a;
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  color: #a1a1aa;
+  background: rgba(28, 28, 28, 0.4);
+}
+
+.schedule-class-delete {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.schedule-class-card:hover .schedule-class-delete,
+.schedule-class-card:focus-within .schedule-class-delete {
+  opacity: 1;
+}
+
+.schedule-class-delete:hover {
+  background: #dc2626;
+}
+
+@media (min-width: 768px) {
+  .schedule-grid {
+    min-width: max(700px, 100%);
+    grid-template-columns: repeat(var(--schedule-cols, 7), minmax(9rem, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .schedule-panel-body {
+    overflow-x: hidden;
+    overflow-y: visible;
+  }
+
+  .schedule-grid {
+    grid-template-columns: 1fr !important;
+    min-width: 0 !important;
+  }
+
+  .schedule-day-column {
+    width: 100%;
+  }
+
+  .schedule-class-delete {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .schedule-class-name {
+    font-size: 0.9375rem;
+  }
+
+  .schedule-class-details {
+    font-size: 0.75rem;
+  }
+}
+
 /* Ajustes de horario — sheet en móvil */
 @media (max-width: 767px) {
   #modal-ajustes-horario {

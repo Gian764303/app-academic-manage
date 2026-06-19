@@ -449,25 +449,25 @@ function eliminarReferenciasCurso(nombre) {
 function buildScheduleDetailsHtml(course, item) {
   const rows = [];
   if (state.settings.showHora && item.hora) {
-    rows.push(`<div class="flex items-center gap-1.5"><span class="text-zinc-500 text-sm">⏰</span> ${escapeHtml(item.hora)}</div>`);
+    rows.push(`<div class="flex items-start gap-1.5"><span class="text-zinc-500 text-sm shrink-0">⏰</span> <span class="break-words min-w-0">${escapeHtml(item.hora)}</span></div>`);
   }
   if (course) {
     if (state.settings.showLugar && course.lugar) {
-      rows.push(`<div class="flex items-center gap-1.5"><span class="text-zinc-500 text-sm">📍</span> <span class="truncate block max-w-full">${escapeHtml(course.lugar)}</span></div>`);
+      rows.push(`<div class="flex items-start gap-1.5"><span class="text-zinc-500 text-sm shrink-0">📍</span> <span class="break-words min-w-0">${escapeHtml(course.lugar)}</span></div>`);
     }
     if (state.settings.showProfesor && course.profesor) {
-      rows.push(`<div class="flex items-center gap-1.5"><span class="text-zinc-500 text-sm">👨‍🏫</span> <span class="truncate block max-w-full">${escapeHtml(course.profesor)}</span></div>`);
+      rows.push(`<div class="flex items-start gap-1.5"><span class="text-zinc-500 text-sm shrink-0">👨‍🏫</span> <span class="break-words min-w-0">${escapeHtml(course.profesor)}</span></div>`);
     }
     if (state.settings.showCorreo && course.correo) {
-      rows.push(`<div class="flex items-center gap-1.5"><span class="text-zinc-500 text-sm">✉️</span> <a href="mailto:${escapeHtml(course.correo)}" onclick="event.stopPropagation();" class="text-blue-400 hover:underline truncate block max-w-full">${escapeHtml(course.correo)}</a></div>`);
+      rows.push(`<div class="flex items-start gap-1.5"><span class="text-zinc-500 text-sm shrink-0">✉️</span> <a href="mailto:${escapeHtml(course.correo)}" onclick="event.stopPropagation();" class="text-blue-400 hover:underline break-words min-w-0">${escapeHtml(course.correo)}</a></div>`);
     }
     if (state.settings.showTelefono && course.telefono) {
-      rows.push(`<div class="flex items-center gap-1.5"><span class="text-zinc-500 text-sm">📞</span> <a href="tel:${escapeHtml(course.telefono)}" onclick="event.stopPropagation();" class="text-blue-400 hover:underline truncate block max-w-full">${escapeHtml(course.telefono)}</a></div>`);
+      rows.push(`<div class="flex items-start gap-1.5"><span class="text-zinc-500 text-sm shrink-0">📞</span> <a href="tel:${escapeHtml(course.telefono)}" onclick="event.stopPropagation();" class="text-blue-400 hover:underline break-words min-w-0">${escapeHtml(course.telefono)}</a></div>`);
     }
     if (state.settings.customProperties && Array.isArray(state.settings.customProperties)) {
       state.settings.customProperties.forEach(prop => {
         if (state.settings[prop.key] && course[prop.key]) {
-          rows.push(`<div class="flex items-center gap-1.5"><span class="text-zinc-500 text-sm">${prop.emoji}</span> <span class="truncate block max-w-full">${escapeHtml(String(course[prop.key]))}</span></div>`);
+          rows.push(`<div class="flex items-start gap-1.5"><span class="text-zinc-500 text-sm shrink-0">${prop.emoji}</span> <span class="break-words min-w-0">${escapeHtml(String(course[prop.key]))}</span></div>`);
         }
       });
     }
@@ -1861,8 +1861,8 @@ function renderSchedule() {
     }
   });
   const visibleDays = ALL_DAYS.filter(d => state.settings.showDays.includes(d));
-  grid.className = `grid gap-4 min-w-[700px]`;
-  grid.style.gridTemplateColumns = `repeat(${visibleDays.length || 1}, minmax(0, 1fr))`;
+  grid.className = 'schedule-grid';
+  grid.style.setProperty('--schedule-cols', String(visibleDays.length || 1));
   if (!visibleDays.length) {
     grid.innerHTML = `
       <div class="col-span-full flex flex-col items-center justify-center py-16 text-center bg-[#232323]/50 border border-zinc-800 rounded-2xl p-8 w-full select-none">
@@ -1883,25 +1883,25 @@ function renderSchedule() {
     Domingo: 'bg-cyan-600/20 border-cyan-700/50 text-cyan-300'
   };
   grid.innerHTML = visibleDays.map(day => `
-    <div class="space-y-3">
-      <div class="${DAY_HEADER_STYLES[day] || 'bg-blue-600/20 border-blue-700/50 text-blue-300'} border text-center py-2 rounded-xl font-semibold text-sm">${day}</div>
+    <div class="schedule-day-column">
+      <div class="schedule-day-header ${DAY_HEADER_STYLES[day] || 'bg-blue-600/20 border-blue-700/50 text-blue-300'}">${day}</div>
       ${state.schedule[day].length === 0 ? `
-        <div class="text-center py-8 border border-zinc-850 rounded-2xl text-[10px] text-zinc-650 font-medium select-none">Sin clases</div>
+        <div class="schedule-empty-day">Sin clases</div>
       ` : state.schedule[day].map((item, idx) => {
     const course = state.courses.find(c => c.title.trim().toUpperCase() === item.clase.trim().toUpperCase());
     const detailsHtml = buildScheduleDetailsHtml(course, item);
     const hasDetails = !!detailsHtml;
     return `
-          <div onclick="abrirEditarClase('${day}', ${idx})" class="bg-[#232323] border border-zinc-700 rounded-2xl overflow-hidden hover:border-zinc-500 transition group relative flex flex-col justify-between select-none cursor-pointer">
-            <div class="p-4">
-              <button onclick="event.stopPropagation(); eliminarClase('${day}',${idx})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition bg-black/40 hover:bg-red-600 rounded-lg w-6 h-6 flex items-center justify-center text-xs z-10">✕</button>
-              <div class="font-semibold text-sm pr-5 flex items-center gap-1.5">
-                <span>${escapeHtml(course && course.emoji ? course.emoji : '📚')}</span>
-                <span>${escapeHtml(item.clase)}</span>
+          <div onclick="abrirEditarClase('${day}', ${idx})" class="schedule-class-card group">
+            <div class="schedule-class-card-body">
+              <button type="button" onclick="event.stopPropagation(); eliminarClase('${day}',${idx})" class="schedule-class-delete" aria-label="Eliminar clase">✕</button>
+              <div class="schedule-class-title">
+                <span class="schedule-class-emoji">${escapeHtml(course && course.emoji ? course.emoji : '📚')}</span>
+                <span class="schedule-class-name">${escapeHtml(item.clase)}</span>
               </div>
             </div>
             ${hasDetails ? `
-              <div class="px-4 pb-4 pt-2 border-t border-zinc-800 text-[11px] text-zinc-450 space-y-1 bg-[#1c1c1c]/40">
+              <div class="schedule-class-details">
                 ${detailsHtml}
               </div>
             ` : ''}
@@ -2923,8 +2923,8 @@ function renderApp() {
           </button>
         </div>
       </div>
-      <div id="panel-horario-body" class="overflow-auto mt-2">
-        <div id="schedule-grid" class="grid gap-4 min-w-[700px]"></div>
+      <div id="panel-horario-body" class="schedule-panel-body mt-2">
+        <div id="schedule-grid" class="schedule-grid"></div>
       </div>
     </section>
 
