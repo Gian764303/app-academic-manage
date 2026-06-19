@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 const NOTIF_ICON = '/icons/icon-192.png';
-const CACHE_NAME = 'ekawent-shell-v11';
+const CACHE_NAME = 'ekawent-shell-v12';
 
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
@@ -31,8 +31,10 @@ const SHELL_ASSETS = [
   '/app.js',
   '/style.css',
   '/manifest.webmanifest',
+  '/icons/icon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
+  '/icons/icon-512-maskable.png',
 ];
 
 self.addEventListener('install', (event) => {

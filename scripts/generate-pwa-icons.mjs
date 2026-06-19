@@ -1,16 +1,17 @@
 import sharp from 'sharp';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const iconsDir = join(root, 'icons');
-const sourcePath = join(iconsDir, 'app-icon.png');
+const sourcePath = join(iconsDir, 'icon.svg');
 
-async function buildIcon(size) {
+async function buildIcon(size, { maskable = false } = {}) {
   const radius = Math.round(size * 0.1875);
-  const inset = Math.round(size * 0.08);
+  const inset = Math.round(size * (maskable ? 0.2 : 0.12));
   const inner = size - inset * 2;
+  const density = Math.max(144, Math.ceil((inner / 128) * 96));
 
   const background = Buffer.from(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}">
@@ -18,7 +19,7 @@ async function buildIcon(size) {
     </svg>`
   );
 
-  const icon = await sharp(sourcePath)
+  const icon = await sharp(sourcePath, { density })
     .resize(inner, inner, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 0 } })
     .png()
     .toBuffer();
@@ -31,15 +32,12 @@ async function buildIcon(size) {
 
 await mkdir(iconsDir, { recursive: true });
 
-for (const size of [192, 512]) {
-  const png = await buildIcon(size);
+for (const size of [32, 192, 512]) {
   const pngPath = join(iconsDir, `icon-${size}.png`);
-  await sharp(png).toFile(pngPath);
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" role="img" aria-label="Ekawent">
-  <rect width="${size}" height="${size}" fill="#ffffff"/>
-  <image href="/icons/icon-${size}.png" width="${size}" height="${size}"/>
-</svg>`;
-  await writeFile(join(iconsDir, `icon-${size}.svg`), svg, 'utf8');
+  await sharp(await buildIcon(size)).toFile(pngPath);
   console.log('Wrote', pngPath);
 }
+
+const maskable512 = await buildIcon(512, { maskable: true });
+await sharp(maskable512).toFile(join(iconsDir, 'icon-512-maskable.png'));
+console.log('Wrote', join(iconsDir, 'icon-512-maskable.png'));

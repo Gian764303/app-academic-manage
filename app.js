@@ -2002,35 +2002,29 @@ function renderDetailedScheduleList() {
     if (filtered.length > 0) {
       foundAny = true;
       html += `
-        <div class="space-y-2">
-          <h4 class="text-xs font-semibold text-blue-400 uppercase tracking-wider pl-1">${day}</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <section class="schedule-list-day-block">
+          <h4 class="schedule-list-day-title">${day}</h4>
+          <div class="schedule-list-cards">
             ${filtered.map(item => {
         const course = state.courses.find(c => c.title.trim().toUpperCase() === item.clase.trim().toUpperCase());
         const detailsHtml = buildScheduleDetailsHtml(course, item);
         const hasDetails = !!detailsHtml;
         const emoji = course ? course.emoji || '📚' : '📚';
         return `
-                <div onclick="cerrarModal('modal-ver-horario'); abrirEditarClase('${day}', ${item.originalIdx})" class="bg-[#232323] border border-zinc-800 rounded-xl p-3.5 hover:border-zinc-700 transition flex items-center justify-between gap-3 group relative cursor-pointer">
-                  <div class="min-w-0 flex items-start gap-2.5">
-                    <span class="text-xl shrink-0 mt-0.5">${emoji}</span>
-                    <div class="min-w-0">
-                      <div class="font-bold text-sm text-white truncate">${item.clase}</div>
-                      ${hasDetails ? `
-                        <div class="text-[11px] text-zinc-450 mt-1.5 space-y-1">
-                          ${detailsHtml}
-                        </div>
-                      ` : ''}
+                <div onclick="cerrarModal('modal-ver-horario'); abrirEditarClase('${day}', ${item.originalIdx})" class="schedule-list-card group">
+                  <div class="schedule-list-card-main">
+                    <span class="schedule-list-card-emoji">${emoji}</span>
+                    <div class="schedule-list-card-body">
+                      <div class="schedule-list-card-name">${escapeHtml(item.clase)}</div>
+                      ${hasDetails ? `<div class="schedule-list-card-details">${detailsHtml}</div>` : ''}
                     </div>
                   </div>
-                  <button onclick="event.stopPropagation(); eliminarClaseDesdeModal('${day}', ${item.originalIdx})" title="Eliminar clase" class="bg-red-950/30 hover:bg-red-650 border border-red-900/40 hover:border-red-600 text-red-400 hover:text-white rounded-lg w-7 h-7 flex items-center justify-center transition shrink-0">
-                    ✕
-                  </button>
+                  <button type="button" onclick="event.stopPropagation(); eliminarClaseDesdeModal('${day}', ${item.originalIdx})" title="Eliminar clase" class="schedule-list-card-delete" aria-label="Eliminar clase">✕</button>
                 </div>
               `;
       }).join('')}
           </div>
-        </div>
+        </section>
       `;
     }
   });

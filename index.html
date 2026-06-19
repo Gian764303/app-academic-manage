@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/icons/icon-32.png" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#111111" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -485,7 +487,7 @@
 
     <!-- MODAL: Ver Horario Completo -->
     <div id="modal-ver-horario" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div class="bg-[#1e1e1e] border border-zinc-700 rounded-3xl p-6 w-full max-w-2xl space-y-6 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden modal-box">
+      <div class="bg-[#1e1e1e] border border-zinc-700 rounded-3xl p-6 w-full max-w-4xl space-y-5 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden modal-box modal-box--schedule-list">
 
         <div class="flex items-center justify-between border-b border-zinc-800 pb-3 shrink-0">
           <h3 class="text-xl font-bold flex items-center gap-2">
@@ -501,7 +503,7 @@
           </div>
         </div>
 
-        <div id="detailed-schedule-list" class="flex-1 overflow-y-auto space-y-4 pr-2"></div>
+        <div id="detailed-schedule-list" class="schedule-list-scroll flex-1 overflow-y-auto"></div>
       </div>
     </div>
 
@@ -618,8 +620,8 @@
 
   </div><!-- end #dashboard-shell -->
 
-  <link rel="stylesheet" href="style.css?v=20260527horario1" />
-  <script src="app.js?v=20260527horario1"></script>
+  <link rel="stylesheet" href="style.css?v=20260527horario4" />
+  <script src="app.js?v=20260527horario2"></script>
   <script type="module" src="js/main.js?v=20260527install18"></script>
 </body>
 </html>
