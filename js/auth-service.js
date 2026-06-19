@@ -11,7 +11,7 @@ import {
 import { auth } from './firebase-config.js';
 import { fetchUserDashboard, saveUserDashboard } from './data-service.js';
 import { syncPushRegistration, unregisterActivityPush } from './push-service.js';
-import { initNotificationInbox, teardownNotificationInbox } from './notification-inbox.js';
+import { initNotificationInbox, teardownNotificationInbox } from './notification-inbox.js?v=20260527notif1';
 
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
@@ -123,7 +123,7 @@ function initAccountMenu() {
 
   function positionMenu() {
     const rect = trigger.getBoundingClientRect();
-    const menuWidth = menu.offsetWidth || 240;
+    const menuWidth = menu.offsetWidth || 168;
     const left = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
     menu.style.top = `${rect.bottom + 8}px`;
     menu.style.left = `${left}px`;
@@ -135,7 +135,6 @@ function initAccountMenu() {
     menu.setAttribute('aria-hidden', 'true');
     backdrop.setAttribute('aria-hidden', 'true');
     trigger.setAttribute('aria-expanded', 'false');
-    document.body.classList.remove('auth-account-open');
   }
 
   function openAccountMenu() {
@@ -145,20 +144,15 @@ function initAccountMenu() {
     menu.setAttribute('aria-hidden', 'false');
     backdrop.setAttribute('aria-hidden', 'false');
     trigger.setAttribute('aria-expanded', 'true');
-    document.body.classList.add('auth-account-open');
   }
 
-  function toggleAccountMenu() {
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
     if (menu.classList.contains('hidden')) {
       openAccountMenu();
     } else {
       closeAccountMenu();
     }
-  }
-
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleAccountMenu();
   });
 
   backdrop.addEventListener('click', closeAccountMenu);

@@ -77,23 +77,26 @@
 
     <div id="auth-user-bar" class="hidden sticky top-0 z-40 bg-[#111111]/95 backdrop-blur border-b border-zinc-800">
       <div class="auth-user-bar-inner max-w-7xl mx-auto px-4 md:px-6 py-3">
-        <button
-          type="button"
-          id="btn-auth-account"
-          class="auth-account-trigger"
-          aria-expanded="false"
-          aria-haspopup="true"
-          aria-controls="auth-account-menu"
-        >
-          <span class="auth-account-avatar-wrap">
-            <img id="auth-user-photo" src="" alt="" class="auth-user-photo" hidden />
-            <span id="auth-user-photo-fallback" class="auth-user-photo-fallback" hidden aria-hidden="true"></span>
-          </span>
+        <div class="auth-account-profile">
+          <button
+            type="button"
+            id="btn-auth-account"
+            class="auth-account-avatar-btn"
+            aria-expanded="false"
+            aria-haspopup="true"
+            aria-controls="auth-account-menu"
+            aria-label="Menú de cuenta"
+          >
+            <span class="auth-account-avatar-wrap">
+              <img id="auth-user-photo" src="" alt="" class="auth-user-photo" hidden />
+              <span id="auth-user-photo-fallback" class="auth-user-photo-fallback" hidden aria-hidden="true"></span>
+            </span>
+          </button>
           <span class="auth-account-text">
             <span class="auth-account-kicker">Sesión</span>
             <span id="auth-user-email" class="auth-user-name"></span>
           </span>
-        </button>
+        </div>
         <div class="auth-user-bar-actions">
           <button
             id="btn-mobile-install"
@@ -129,7 +132,7 @@
     </div>
 
     <div id="auth-account-backdrop" class="auth-account-backdrop hidden" aria-hidden="true"></div>
-    <div id="auth-account-menu" class="auth-account-menu hidden" role="dialog" aria-modal="true" aria-labelledby="auth-menu-name" aria-hidden="true">
+    <div id="auth-account-menu" class="auth-account-menu hidden" role="menu" aria-labelledby="auth-menu-name" aria-hidden="true">
       <div class="auth-account-menu-profile">
         <span class="auth-account-menu-avatar-wrap">
           <img id="auth-menu-photo" src="" alt="" class="auth-user-photo" hidden />
@@ -140,7 +143,7 @@
           <p id="auth-menu-email" class="auth-menu-email hidden"></p>
         </div>
       </div>
-      <button id="btn-logout" type="button" class="auth-account-menu-logout">Cerrar sesión</button>
+      <button id="btn-logout" type="button" class="auth-account-menu-logout" role="menuitem">Cerrar sesión</button>
     </div>
 
     <div id="pwa-install-banner" class="pwa-install-banner hidden" role="dialog" aria-modal="true" aria-labelledby="pwa-banner-title" aria-hidden="true">
@@ -179,10 +182,12 @@
       <div class="notif-inbox-settings">
         <p id="act-notif-status" class="notif-inbox-settings-desc">Acepta el permiso del navegador para recibir avisos 24 h y 4 h antes de una actividad.</p>
         <div id="act-notif-denied-help" class="hidden notif-inbox-settings-alert">
-          <p>Las notificaciones están bloqueadas por el navegador.</p>
+          <p class="notif-inbox-settings-alert-title">Las notificaciones están bloqueadas</p>
+          <p id="act-notif-denied-help-text" class="notif-inbox-settings-alert-body"></p>
         </div>
         <div id="act-notif-denied-help-mobile" class="hidden notif-inbox-settings-alert">
-          <p>Las notificaciones están bloqueadas por el navegador.</p>
+          <p class="notif-inbox-settings-alert-title">Las notificaciones están bloqueadas</p>
+          <p class="notif-inbox-settings-alert-body">Toca el ícono del candado o ⓘ en la barra del navegador → Notificaciones → Permitir. Luego recarga la página y vuelve a tocar la campana.</p>
         </div>
         <div id="act-notif-ios-help" class="hidden notif-inbox-settings-alert">
           <p>En iPhone/iPad: Safari → Compartir → “Añadir a pantalla de inicio”, abre la app y toca la campana.</p>
@@ -630,8 +635,8 @@
 
   </div><!-- end #dashboard-shell -->
 
-  <link rel="stylesheet" href="style.css?v=20260527install10" />
-  <script src="app.js?v=20260527icons4"></script>
-  <script type="module" src="js/main.js?v=20260527install7"></script>
+  <link rel="stylesheet" href="style.css?v=20260527install17" />
+  <script src="app.js?v=20260527cal1"></script>
+  <script type="module" src="js/main.js?v=20260527install17"></script>
 </body>
 </html>

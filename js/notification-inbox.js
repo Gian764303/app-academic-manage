@@ -86,6 +86,33 @@ function isMobileInbox() {
   return window.matchMedia('(max-width: 767px)').matches;
 }
 
+function getDesktopBrowserKind() {
+  const ua = navigator.userAgent;
+  if (/Edg\//.test(ua)) return 'edge';
+  if (/Firefox\//.test(ua)) return 'firefox';
+  if (/Chrome\//.test(ua) || /CriOS\//.test(ua)) return 'chrome';
+  return 'generic';
+}
+
+function getDesktopDeniedHelpText() {
+  const kind = getDesktopBrowserKind();
+  if (kind === 'firefox') {
+    return 'Haz clic en el candado en la barra de direcciones → Permisos → Notificaciones → Permitir. Luego recarga la página y vuelve a tocar la campana.';
+  }
+  if (kind === 'edge') {
+    return 'En la barra de direcciones, haz clic en el candado → Permisos para este sitio → Notificaciones → Permitir. Luego recarga la página y vuelve a tocar la campana.';
+  }
+  if (kind === 'chrome') {
+    return 'En la barra de direcciones, haz clic en el candado (o el icono de ajustes) → Notificaciones → Permitir. Luego recarga la página y vuelve a tocar la campana.';
+  }
+  return 'En la barra de direcciones → candado → Notificaciones → Permitir. Luego recarga la página y vuelve a tocar la campana.';
+}
+
+function populateDeniedHelpText() {
+  const desktopText = document.getElementById('act-notif-denied-help-text');
+  if (desktopText) desktopText.textContent = getDesktopDeniedHelpText();
+}
+
 function positionInboxPanelDesktop() {
   const btn = document.getElementById('btn-notif-bell');
   const panel = document.getElementById('notif-inbox-panel');
@@ -152,9 +179,9 @@ function isNotifPermissionBlocked() {
   return Notification.permission === 'denied';
 }
 
-function setMobileBlockedFocus(active) {
+function setBlockedNotifFocus(active) {
   const panel = document.getElementById('notif-inbox-panel');
-  if (!panel || !isMobileInbox()) return;
+  if (!panel) return;
   panel.classList.toggle('notif-inbox-panel--permission-blocked', active);
 }
 
@@ -164,6 +191,7 @@ function showBlockedNotifUI() {
   const deniedHelpMobile = document.getElementById('act-notif-denied-help-mobile');
   const iosHelp = document.getElementById('act-notif-ios-help');
   if (!statusEl) return;
+  populateDeniedHelpText();
   statusEl.textContent = 'Permiso bloqueado en el navegador.';
   statusEl.className = 'notif-inbox-settings-desc notif-inbox-settings-desc--blocked';
   deniedHelp?.classList.toggle('hidden', isMobileInbox());
@@ -171,7 +199,7 @@ function showBlockedNotifUI() {
   deniedHelp?.classList.add('notif-inbox-settings-alert--denied');
   deniedHelpMobile?.classList.add('notif-inbox-settings-alert--denied');
   iosHelp?.classList.add('hidden');
-  setMobileBlockedFocus(true);
+  setBlockedNotifFocus(true);
 }
 
 function showPendingNotifUI() {
@@ -187,7 +215,7 @@ function showPendingNotifUI() {
   deniedHelp?.classList.remove('notif-inbox-settings-alert--denied');
   deniedHelpMobile?.classList.remove('notif-inbox-settings-alert--denied');
   iosHelp?.classList.add('hidden');
-  setMobileBlockedFocus(false);
+  setBlockedNotifFocus(false);
 }
 
 function openInboxPanel() {
@@ -216,7 +244,7 @@ function openInboxPanel() {
     return;
   }
 
-  setMobileBlockedFocus(false);
+  setBlockedNotifFocus(false);
   void syncNotifStatusUI();
 }
 
@@ -259,7 +287,7 @@ async function syncNotifStatusUI() {
     deniedHelp?.classList.remove('notif-inbox-settings-alert--denied');
     iosHelp?.classList.toggle('hidden', support.reason !== 'ios-needs-pwa');
     if (isMobileInbox() && support.reason === 'ios-needs-pwa') {
-      setMobileBlockedFocus(true);
+      setBlockedNotifFocus(true);
     }
     return;
   }
@@ -278,7 +306,7 @@ async function syncNotifStatusUI() {
   deniedHelp?.classList.remove('notif-inbox-settings-alert--denied');
   deniedHelpMobile?.classList.add('hidden');
   deniedHelpMobile?.classList.remove('notif-inbox-settings-alert--denied');
-  setMobileBlockedFocus(false);
+  setBlockedNotifFocus(false);
 
   const active = Notification.permission === 'granted' && window.isPushRegistered?.();
 
@@ -330,7 +358,7 @@ function runBellPermissionFlow() {
     .then(async (result) => {
       if (result === 'granted') {
         await ensurePushRegistered();
-        setMobileBlockedFocus(false);
+        setBlockedNotifFocus(false);
       } else if (result === 'denied') {
         showBlockedNotifUI();
       }
