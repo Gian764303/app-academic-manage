@@ -1,6 +1,5 @@
 const SW_PATH = '/sw.js';
-const NOTIF_ICON = '/icons/icon-192.svg';
-const PWA_BANNER_DISMISS_KEY = 'pwa-install-banner-dismissed';
+const NOTIF_ICON = '/icons/icon-192.png';
 
 let deferredInstallPrompt = null;
 
@@ -9,19 +8,19 @@ function isStandaloneDisplay() {
     || window.navigator.standalone === true;
 }
 
-function isIosSafariInstallable() {
+function isIosDevice() {
   const ua = navigator.userAgent;
-  const isIos = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  return isIos && !isStandaloneDisplay();
+  return /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
-function isBannerDismissed() {
-  return localStorage.getItem(PWA_BANNER_DISMISS_KEY) === '1';
+function isAndroidDevice() {
+  return /Android/i.test(navigator.userAgent);
 }
 
-function dismissPwaBanner() {
-  localStorage.setItem(PWA_BANNER_DISMISS_KEY, '1');
-  syncPwaBanner();
+function resolveManualPlatform() {
+  if (isIosDevice()) return 'ios';
+  if (isAndroidDevice()) return 'android';
+  return 'generic';
 }
 
 export function isPwaInstalled() {
@@ -32,34 +31,65 @@ export function canInstallPwa() {
   return !!deferredInstallPrompt;
 }
 
-export function canShowMobileInstall() {
-  if (isPwaInstalled()) return false;
-  return canInstallPwa() || isIosSafariInstallable();
+function waitForInstallPrompt(maxMs = 3500) {
+  if (deferredInstallPrompt) return Promise.resolve(true);
+  return new Promise((resolve) => {
+    const started = Date.now();
+    const tick = () => {
+      if (deferredInstallPrompt) {
+        resolve(true);
+        return;
+      }
+      if (Date.now() - started >= maxMs) {
+        resolve(false);
+        return;
+      }
+      setTimeout(tick, 150);
+    };
+    tick();
+  });
 }
 
-function isMobileViewport() {
-  return window.matchMedia('(max-width: 767px)').matches;
+function setBannerManualSteps(platform) {
+  document.getElementById('pwa-banner-manual-ios')?.classList.toggle('hidden', platform !== 'ios');
+  document.getElementById('pwa-banner-manual-android')?.classList.toggle('hidden', platform !== 'android');
+  document.getElementById('pwa-banner-manual-generic')?.classList.toggle('hidden', platform !== 'generic');
 }
 
-function openMobileInstallSheet() {
-  const backdrop = document.getElementById('mobile-install-backdrop');
-  const sheet = document.getElementById('mobile-install-sheet');
-  if (!backdrop || !sheet) return;
-  backdrop.classList.remove('hidden');
-  sheet.classList.remove('hidden');
-  backdrop.setAttribute('aria-hidden', 'false');
-  sheet.setAttribute('aria-hidden', 'false');
-  document.body.classList.add('mobile-install-open');
+function openInstallBanner(mode) {
+  const banner = document.getElementById('pwa-install-banner');
+  const titleEl = document.getElementById('pwa-banner-title');
+  const descEl = document.getElementById('pwa-banner-desc');
+  const installBtn = document.getElementById('btn-pwa-banner-install');
+  if (!banner) return;
+
+  const isDirect = mode === 'direct' && canInstallPwa();
+
+  if (titleEl) {
+    titleEl.textContent = isDirect ? 'Instala Ekawent' : 'Añadir a pantalla de inicio';
+  }
+  if (descEl) {
+    descEl.textContent = isDirect
+      ? 'Acceso rápido desde tu inicio, como una app.'
+      : 'Tu navegador no permite instalar automáticamente. Sigue estos pasos:';
+  }
+
+  installBtn?.classList.toggle('hidden', !isDirect);
+  setBannerManualSteps(isDirect ? null : resolveManualPlatform());
+  document.querySelectorAll('.pwa-install-banner-manual').forEach((el) => {
+    if (isDirect) el.classList.add('hidden');
+  });
+
+  banner.classList.remove('hidden');
+  banner.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('pwa-install-banner-open');
 }
 
-function closeMobileInstallSheet() {
-  const backdrop = document.getElementById('mobile-install-backdrop');
-  const sheet = document.getElementById('mobile-install-sheet');
-  backdrop?.classList.add('hidden');
-  sheet?.classList.add('hidden');
-  backdrop?.setAttribute('aria-hidden', 'true');
-  sheet?.setAttribute('aria-hidden', 'true');
-  document.body.classList.remove('mobile-install-open');
+function closeInstallBanner() {
+  const banner = document.getElementById('pwa-install-banner');
+  banner?.classList.add('hidden');
+  banner?.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('pwa-install-banner-open');
 }
 
 export function syncMobileInstallBtn() {
@@ -67,25 +97,23 @@ export function syncMobileInstallBtn() {
   if (!btn) return;
   const dashboard = document.getElementById('dashboard-shell');
   const loggedIn = dashboard && !dashboard.classList.contains('hidden');
-  const show = loggedIn && isMobileViewport() && canShowMobileInstall();
+  const show = loggedIn && !isPwaInstalled();
   btn.classList.toggle('hidden', !show);
 }
 
-async function handleMobileInstallClick() {
-  if (canInstallPwa()) {
-    const result = await promptPwaInstall();
-    if (result.ok) return;
-    if (isIosSafariInstallable()) {
-      openMobileInstallSheet();
-    } else {
-      window.showAuthToast?.('Tu navegador no permite instalar desde aquí. Usa el menú del navegador.', 'info');
-    }
+async function handleInstallHeaderClick() {
+  if (isPwaInstalled()) {
+    window.showAuthToast?.('La app ya está instalada.', 'info');
     return;
   }
 
-  if (isIosSafariInstallable()) {
-    openMobileInstallSheet();
+  if (deferredInstallPrompt) {
+    openInstallBanner('direct');
+    return;
   }
+
+  await waitForInstallPrompt(3500);
+  openInstallBanner(canInstallPwa() ? 'direct' : 'manual');
 }
 
 async function getRegistration() {
@@ -126,148 +154,76 @@ export async function showPwaNotification(title, body, tag) {
 
 export async function promptPwaInstall() {
   if (!deferredInstallPrompt) return { ok: false, reason: 'unavailable' };
-  deferredInstallPrompt.prompt();
-  const { outcome } = await deferredInstallPrompt.userChoice;
-  deferredInstallPrompt = null;
-  syncPwaInstallUI();
-  syncPwaBanner();
-  return { ok: outcome === 'accepted', outcome };
+  try {
+    await deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    closeInstallBanner();
+    syncMobileInstallBtn();
+    if (outcome === 'accepted') {
+      window.showAuthToast?.('Instalada correctamente.', 'success');
+    }
+    return { ok: outcome === 'accepted', outcome };
+  } catch (err) {
+    console.warn('PWA install prompt failed:', err);
+    deferredInstallPrompt = null;
+    openInstallBanner('manual');
+    return { ok: false, reason: 'error' };
+  }
 }
 
 export function syncPwaBanner() {
-  const banner = document.getElementById('pwa-install-banner');
-  const installBtn = document.getElementById('btn-pwa-banner-install');
-  const descEl = document.getElementById('pwa-banner-desc');
   syncMobileInstallBtn();
-  if (!banner) return;
-
-  const dashboard = document.getElementById('dashboard-shell');
-  const loggedIn = dashboard && !dashboard.classList.contains('hidden');
-
-  if (!loggedIn || isPwaInstalled() || isBannerDismissed()) {
-    banner.classList.add('hidden');
-    return;
-  }
-
-  if (isMobileViewport() && canShowMobileInstall()) {
-    banner.classList.add('hidden');
-    return;
-  }
-
-  if (canInstallPwa()) {
-    banner.classList.remove('hidden');
-    installBtn?.classList.remove('hidden');
-    if (descEl) {
-      descEl.textContent = 'Acceso rápido desde tu inicio.';
-    }
-    return;
-  }
-
-  if (isIosSafariInstallable()) {
-    banner.classList.remove('hidden');
-    installBtn?.classList.add('hidden');
-    if (descEl) {
-      descEl.textContent = 'En Safari: Compartir → “Añadir a pantalla de inicio”.';
-    }
-    return;
-  }
-
-  banner.classList.add('hidden');
 }
 
 export function syncPwaInstallUI() {
-  const statusEl = document.getElementById('pwa-install-status');
-  const installBtn = document.getElementById('btn-pwa-install');
-  const installedInfo = document.getElementById('pwa-installed-info');
-  if (!statusEl) {
-    syncPwaBanner();
-    return;
-  }
+  syncMobileInstallBtn();
+}
 
-  if (isPwaInstalled()) {
-    statusEl.textContent = 'App instalada';
-    statusEl.className = 'text-sm font-medium text-emerald-400';
-    installBtn?.classList.add('hidden');
-    installedInfo?.classList.remove('hidden');
-    syncPwaBanner();
-    return;
-  }
-
-  installedInfo?.classList.add('hidden');
-  statusEl.className = 'text-sm text-zinc-300 leading-relaxed';
-
-  if (canInstallPwa()) {
-    statusEl.textContent = 'Instala la app para abrirla desde tu inicio.';
-    installBtn?.classList.remove('hidden');
-    syncPwaBanner();
-    return;
-  }
-
-  statusEl.textContent = 'En Chrome/Edge: menú del navegador → “Instalar app” o “Agregar a pantalla de inicio”.';
-  installBtn?.classList.add('hidden');
-  syncPwaBanner();
+function captureInstallPrompt(event) {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  syncMobileInstallBtn();
 }
 
 export async function initPwa() {
-  if (!('serviceWorker' in navigator)) return;
-
-  window.addEventListener('beforeinstallprompt', (event) => {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    syncPwaInstallUI();
-    syncPwaBanner();
-  });
-
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
-    syncPwaInstallUI();
-    syncPwaBanner();
+    closeInstallBanner();
     syncMobileInstallBtn();
-    closeMobileInstallSheet();
     window.showAuthToast?.('Instalada correctamente.', 'success');
   });
 
+  document.getElementById('btn-mobile-install')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    void handleInstallHeaderClick();
+  });
+
   document.getElementById('btn-pwa-banner-install')?.addEventListener('click', () => {
-    promptPwaInstall();
-  });
-
-  document.getElementById('btn-mobile-install')?.addEventListener('click', () => {
-    void handleMobileInstallClick();
-  });
-
-  document.getElementById('btn-mobile-install-close')?.addEventListener('click', () => {
-    closeMobileInstallSheet();
-  });
-
-  document.getElementById('mobile-install-backdrop')?.addEventListener('click', () => {
-    closeMobileInstallSheet();
-  });
-
-  window.addEventListener('resize', () => {
-    syncMobileInstallBtn();
-    syncPwaBanner();
+    void promptPwaInstall();
   });
 
   document.getElementById('btn-pwa-banner-dismiss')?.addEventListener('click', () => {
-    dismissPwaBanner();
+    closeInstallBanner();
   });
 
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    if (event.data?.type === 'OPEN_ACTIVITIES') {
-      document.getElementById('panel-actividades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      if (window.location.hash !== '#actividades') {
-        history.replaceState(null, '', `${window.location.pathname}${window.location.search}#actividades`);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'OPEN_ACTIVITIES') {
+        document.getElementById('panel-actividades')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (window.location.hash !== '#actividades') {
+          history.replaceState(null, '', `${window.location.pathname}${window.location.search}#actividades`);
+        }
       }
-    }
-  });
+    });
 
-  const reg = await getRegistration();
-  if (reg?.waiting) {
-    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    const reg = await getRegistration();
+    if (reg?.waiting) {
+      reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    }
   }
 
-  syncPwaInstallUI();
-  syncPwaBanner();
   syncMobileInstallBtn();
 }
 
@@ -277,3 +233,7 @@ window.syncPwaInstallUI = syncPwaInstallUI;
 window.syncPwaBanner = syncPwaBanner;
 window.syncMobileInstallBtn = syncMobileInstallBtn;
 window.isPwaInstalled = isPwaInstalled;
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', captureInstallPrompt);
+}

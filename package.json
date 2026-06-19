@@ -7,10 +7,12 @@
     "deploy:hosting": "firebase deploy --only hosting",
     "deploy:rules": "firebase deploy --only firestore:rules",
     "deploy:functions": "firebase deploy --only functions",
-    "deploy:push": "firebase deploy --only hosting,firestore:rules,firestore:indexes,functions"
+    "deploy:push": "firebase deploy --only hosting,firestore:rules,firestore:indexes,functions",
+    "generate:pwa-icons": "node scripts/generate-pwa-icons.mjs"
   },
   "devDependencies": {
-    "firebase-tools": "^13.0.0"
+    "firebase-tools": "^13.0.0",
+    "sharp": "^0.35.1"
   },
   "dependencies": {
     "cloudinary": "^2.10.0",

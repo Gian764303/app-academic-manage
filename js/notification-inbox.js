@@ -191,6 +191,7 @@ function showPendingNotifUI() {
 }
 
 function openInboxPanel() {
+  window.closeAccountMenu?.();
   ensureInboxOverlayMounted();
 
   const panel = document.getElementById('notif-inbox-panel');

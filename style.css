@@ -265,13 +265,20 @@ button[onclick*="togglePanelBody"] svg,
   .panel-header-actions--calendar {
     flex-wrap: nowrap !important;
     justify-content: space-between !important;
+    align-items: center !important;
     gap: 0.375rem !important;
   }
 
   .panel-header-actions--calendar > button:not(.panel-toggle-btn) {
     flex: 0 0 auto !important;
-    padding: 0.375rem 0.5rem !important;
-    font-size: 0.75rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0 !important;
+    font-size: 0.875rem !important;
+    line-height: 1 !important;
   }
 
   .panel-cal-title,
@@ -279,22 +286,14 @@ button[onclick*="togglePanelBody"] svg,
     flex: 1 1 auto !important;
     min-width: 0 !important;
     width: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     font-size: 0.9375rem !important;
+    line-height: 1 !important;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  #auth-user-bar .max-w-7xl {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  #auth-user-bar #btn-logout {
-    flex-shrink: 0;
-    font-size: 0.8125rem;
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
   }
 
   /* Calendar — compact cells with activity dots */
@@ -1029,6 +1028,192 @@ td[data-col]{position:relative;}
   .auth-preview-frame--2 { opacity: 0; }
 }
 
+/* ── Auth user bar & account menu ── */
+.auth-user-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+.auth-account-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 0.75rem;
+  transition: opacity 0.15s ease;
+}
+
+.auth-account-trigger:hover {
+  opacity: 0.92;
+}
+
+.auth-account-avatar-wrap,
+.auth-account-menu-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.auth-account-avatar-wrap .auth-user-photo,
+.auth-account-menu-avatar-wrap .auth-user-photo,
+.auth-account-avatar-wrap .auth-user-photo-fallback,
+.auth-account-menu-avatar-wrap .auth-user-photo-fallback {
+  position: absolute;
+  inset: 0;
+}
+
+.auth-user-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  border: 1px solid #52525b;
+  object-fit: cover;
+  display: block;
+}
+
+.auth-user-photo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  border: 1px solid #52525b;
+  background: #27272a;
+  color: #e4e4e7;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.auth-user-photo[hidden],
+.auth-user-photo-fallback[hidden],
+.auth-user-photo.hidden,
+.auth-user-photo-fallback.hidden {
+  display: none !important;
+}
+
+.auth-account-text {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.auth-account-kicker {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.auth-user-name {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  font-weight: 500;
+  color: #e4e4e7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-user-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.auth-account-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 115;
+  background: transparent;
+}
+
+.auth-account-backdrop.hidden {
+  display: none !important;
+}
+
+.auth-account-menu {
+  position: fixed;
+  z-index: 116;
+  min-width: 15rem;
+  max-width: min(20rem, calc(100vw - 1.5rem));
+  padding: 0.875rem;
+  border-radius: 1rem;
+  border: 1px solid #3f3f46;
+  background: #1a1a1a;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.auth-account-menu.hidden {
+  display: none !important;
+}
+
+.auth-account-menu-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid #27272a;
+}
+
+.auth-account-menu-info {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.auth-menu-name {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #f4f4f5;
+  word-break: break-word;
+}
+
+.auth-menu-email {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #a1a1aa;
+  word-break: break-all;
+}
+
+.auth-account-menu-logout {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.75rem;
+  border: 1px solid #3f3f46;
+  background: #27272a;
+  color: #f4f4f5;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.auth-account-menu-logout:hover {
+  background: #3f3f46;
+  border-color: #52525b;
+}
+
 /* ── PWA install banner ── */
 .pwa-install-banner {
   position: fixed;
@@ -1042,26 +1227,33 @@ td[data-col]{position:relative;}
 
 .pwa-install-banner:not(.hidden) {
   pointer-events: auto;
+  animation: pwaBannerIn 0.28s ease both;
+}
+
+@keyframes pwaBannerIn {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .pwa-install-banner-inner {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   max-width: 42rem;
   margin: 0 auto;
-  padding: 0.875rem 1rem;
+  padding: 0.875rem 2.75rem 0.875rem 1rem;
   background: linear-gradient(135deg, rgba(30, 30, 30, 0.98), rgba(24, 24, 24, 0.98));
   border: 1px solid rgba(59, 130, 246, 0.35);
   border-radius: 1.25rem;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   backdrop-filter: blur(12px);
-}
-
-.pwa-install-banner-emoji {
-  font-size: 1.75rem;
-  line-height: 1;
-  flex-shrink: 0;
 }
 
 .pwa-install-banner-copy {
@@ -1082,6 +1274,25 @@ td[data-col]{position:relative;}
   font-size: 0.75rem;
   line-height: 1.35;
   color: #a1a1aa;
+}
+
+.pwa-install-banner-manual {
+  margin-top: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.75rem;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #bfdbfe;
+}
+
+.pwa-install-banner-manual p {
+  margin: 0;
+}
+
+.pwa-install-banner-manual.hidden {
+  display: none !important;
 }
 
 .pwa-install-banner-actions {
@@ -1109,6 +1320,10 @@ td[data-col]{position:relative;}
 }
 
 .pwa-install-banner-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1132,154 +1347,54 @@ td[data-col]{position:relative;}
   .pwa-install-banner-inner {
     flex-wrap: wrap;
     align-items: flex-start;
+    padding-right: 2.75rem;
   }
 
   .pwa-install-banner-actions {
     width: 100%;
-    justify-content: flex-end;
-    padding-left: 2.5rem;
+    justify-content: flex-start;
+    margin-top: 0.25rem;
   }
 }
 
 #dashboard-shell:has(#pwa-install-banner:not(.hidden)) #app {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (max-width: 520px) {
   #dashboard-shell:has(#pwa-install-banner:not(.hidden)) #app {
-    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(7.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
-/* ── Mobile install button (header) ── */
-.mobile-install-btn {
-  display: none;
+body.pwa-install-banner-open {
+  overflow: hidden;
 }
 
-.mobile-install-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 118;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.mobile-install-backdrop.hidden {
-  display: none !important;
-}
-
-.mobile-install-sheet {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 119;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 0.75rem 1.25rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
-  background: #1e1e1e;
-  border: 1px solid #3f3f46;
-  border-bottom: none;
-  border-radius: 1.25rem 1.25rem 0 0;
-  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.55);
-  animation: notifSheetIn 0.28s ease both;
-}
-
-.mobile-install-sheet.hidden {
-  display: none !important;
-}
-
-.mobile-install-sheet-handle {
+/* ── Header install icon button ── */
+.pwa-header-install-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 2.5rem;
-  height: 0.25rem;
-  margin: 0 auto 0.25rem;
-  border-radius: 9999px;
-  background: #52525b;
-}
-
-.mobile-install-sheet-title {
-  margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  color: #f4f4f5;
-}
-
-.mobile-install-sheet-desc {
-  margin: 0;
-  font-size: 0.875rem;
-  line-height: 1.45;
-  color: #a1a1aa;
-}
-
-.mobile-install-sheet-steps {
-  padding: 0.75rem 0.875rem;
+  height: 2.5rem;
   border-radius: 0.75rem;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  font-size: 0.8125rem;
-  line-height: 1.45;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+  background: rgba(37, 99, 235, 0.15);
+  color: #93c5fd;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.pwa-header-install-btn:hover {
+  background: rgba(37, 99, 235, 0.28);
+  border-color: rgba(59, 130, 246, 0.65);
   color: #bfdbfe;
 }
 
-.mobile-install-sheet-steps-label {
-  margin: 0 0 0.35rem;
-  font-weight: 600;
-  color: #93c5fd;
-}
-
-.mobile-install-sheet-steps p {
-  margin: 0;
-}
-
-.mobile-install-sheet-btn {
-  width: 100%;
-  margin-top: 0.25rem;
-  padding: 0.75rem 1rem;
-  border: none;
-  border-radius: 0.75rem;
-  background: #2563eb;
-  color: #fff;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.mobile-install-sheet-btn:hover {
-  background: #1d4ed8;
-}
-
-@media (max-width: 767px) {
-  body.mobile-install-open {
-    overflow: hidden;
-  }
-
-  .mobile-install-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    height: 2.5rem;
-    padding: 0 0.625rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(59, 130, 246, 0.45);
-    background: rgba(37, 99, 235, 0.15);
-    color: #93c5fd;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s ease, border-color 0.15s ease;
-  }
-
-  .mobile-install-btn:hover {
-    background: rgba(37, 99, 235, 0.25);
-    border-color: rgba(59, 130, 246, 0.65);
-  }
-
-  .mobile-install-btn.hidden {
-    display: none !important;
-  }
+.pwa-header-install-btn.hidden {
+  display: none !important;
 }
 
 /* ── Notification inbox (bell) ── */

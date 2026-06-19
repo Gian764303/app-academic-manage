@@ -10,8 +10,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Ekawent" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.svg" />
-  <title>Student Dashboard</title>
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <title>Ekawent</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -76,27 +76,37 @@
   <div id="dashboard-shell" class="hidden">
 
     <div id="auth-user-bar" class="hidden sticky top-0 z-40 bg-[#111111]/95 backdrop-blur border-b border-zinc-800">
-      <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
-        <div class="flex items-center gap-3 min-w-0">
-          <img id="auth-user-photo" src="" alt="" class="hidden w-9 h-9 rounded-full border border-zinc-600 shrink-0" />
-          <div class="min-w-0">
-            <p class="text-xs text-zinc-500 uppercase tracking-wider">Sesión</p>
-            <p id="auth-user-email" class="text-sm font-medium truncate text-zinc-200"></p>
-          </div>
-        </div>
-        <div class="flex items-center gap-2 shrink-0">
+      <div class="auth-user-bar-inner max-w-7xl mx-auto px-4 md:px-6 py-3">
+        <button
+          type="button"
+          id="btn-auth-account"
+          class="auth-account-trigger"
+          aria-expanded="false"
+          aria-haspopup="true"
+          aria-controls="auth-account-menu"
+        >
+          <span class="auth-account-avatar-wrap">
+            <img id="auth-user-photo" src="" alt="" class="auth-user-photo" hidden />
+            <span id="auth-user-photo-fallback" class="auth-user-photo-fallback" hidden aria-hidden="true"></span>
+          </span>
+          <span class="auth-account-text">
+            <span class="auth-account-kicker">Sesión</span>
+            <span id="auth-user-email" class="auth-user-name"></span>
+          </span>
+        </button>
+        <div class="auth-user-bar-actions">
           <button
             id="btn-mobile-install"
             type="button"
-            class="mobile-install-btn hidden"
-            aria-label="Instalar Ekawent en tu celular"
+            class="pwa-header-install-btn hidden"
+            aria-label="Instalar Ekawent"
+            title="Instalar app"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M12 3v12"/>
               <path d="m7 10 5 5 5-5"/>
               <path d="M5 21h14"/>
             </svg>
-            <span>Instalar</span>
           </button>
           <div id="notif-bell-wrap" class="notif-bell-wrap">
             <button
@@ -114,21 +124,45 @@
               <span id="notif-badge" class="notif-badge hidden">0</span>
             </button>
           </div>
-          <button id="btn-logout" type="button" class="shrink-0 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-4 py-2 rounded-xl text-sm font-medium transition">Cerrar sesión</button>
         </div>
       </div>
     </div>
 
-    <div id="mobile-install-backdrop" class="mobile-install-backdrop hidden" aria-hidden="true"></div>
-    <div id="mobile-install-sheet" class="mobile-install-sheet hidden" role="dialog" aria-modal="true" aria-labelledby="mobile-install-title" aria-hidden="true">
-      <div class="mobile-install-sheet-handle" aria-hidden="true"></div>
-      <h2 id="mobile-install-title" class="mobile-install-sheet-title">¿Quieres instalar Ekawent?</h2>
-      <p class="mobile-install-sheet-desc">Ábrela desde tu inicio, como una app en tu celular.</p>
-      <div class="mobile-install-sheet-steps">
-        <p class="mobile-install-sheet-steps-label">En Safari (iPhone o iPad):</p>
-        <p>Toca <strong>Compartir</strong> → <strong>Añadir a pantalla de inicio</strong></p>
+    <div id="auth-account-backdrop" class="auth-account-backdrop hidden" aria-hidden="true"></div>
+    <div id="auth-account-menu" class="auth-account-menu hidden" role="dialog" aria-modal="true" aria-labelledby="auth-menu-name" aria-hidden="true">
+      <div class="auth-account-menu-profile">
+        <span class="auth-account-menu-avatar-wrap">
+          <img id="auth-menu-photo" src="" alt="" class="auth-user-photo" hidden />
+          <span id="auth-menu-photo-fallback" class="auth-user-photo-fallback" hidden aria-hidden="true"></span>
+        </span>
+        <div class="auth-account-menu-info">
+          <p id="auth-menu-name" class="auth-menu-name"></p>
+          <p id="auth-menu-email" class="auth-menu-email hidden"></p>
+        </div>
       </div>
-      <button type="button" id="btn-mobile-install-close" class="mobile-install-sheet-btn">Entendido</button>
+      <button id="btn-logout" type="button" class="auth-account-menu-logout">Cerrar sesión</button>
+    </div>
+
+    <div id="pwa-install-banner" class="pwa-install-banner hidden" role="dialog" aria-modal="true" aria-labelledby="pwa-banner-title" aria-hidden="true">
+      <div class="pwa-install-banner-inner">
+        <button type="button" id="btn-pwa-banner-dismiss" class="pwa-install-banner-close" aria-label="Cerrar">✕</button>
+        <div class="pwa-install-banner-copy">
+          <p id="pwa-banner-title" class="pwa-install-banner-title">Instala Ekawent</p>
+          <p id="pwa-banner-desc" class="pwa-install-banner-desc">Acceso rápido desde tu inicio, como una app.</p>
+          <div id="pwa-banner-manual-ios" class="pwa-install-banner-manual hidden">
+            <p><strong>iPhone / iPad:</strong> toca <strong>Compartir</strong> → <strong>Añadir a pantalla de inicio</strong>.</p>
+          </div>
+          <div id="pwa-banner-manual-android" class="pwa-install-banner-manual hidden">
+            <p><strong>Android:</strong> menú <strong>⋮</strong> → <strong>Instalar aplicación</strong> o <strong>Añadir a pantalla de inicio</strong>.</p>
+          </div>
+          <div id="pwa-banner-manual-generic" class="pwa-install-banner-manual hidden">
+            <p>Abre el menú del navegador y elige <strong>Instalar</strong> o <strong>Añadir a pantalla de inicio</strong>.</p>
+          </div>
+        </div>
+        <div class="pwa-install-banner-actions">
+          <button type="button" id="btn-pwa-banner-install" class="pwa-install-banner-btn hidden">Instalar ahora</button>
+        </div>
+      </div>
     </div>
 
     <div id="notif-inbox-backdrop" class="notif-inbox-backdrop hidden" aria-hidden="true"></div>
@@ -145,10 +179,10 @@
       <div class="notif-inbox-settings">
         <p id="act-notif-status" class="notif-inbox-settings-desc">Acepta el permiso del navegador para recibir avisos 24 h y 4 h antes de una actividad.</p>
         <div id="act-notif-denied-help" class="hidden notif-inbox-settings-alert">
-          <p>Las notificaciones están bloqueadas. En la barra de direcciones → candado → Notificaciones → Permitir.</p>
+          <p>Las notificaciones están bloqueadas por el navegador.</p>
         </div>
         <div id="act-notif-denied-help-mobile" class="hidden notif-inbox-settings-alert">
-          <p>Las notificaciones están bloqueadas. Toca el ícono del candado o ⓘ en la barra del navegador → Notificaciones → Permitir.</p>
+          <p>Las notificaciones están bloqueadas por el navegador.</p>
         </div>
         <div id="act-notif-ios-help" class="hidden notif-inbox-settings-alert">
           <p>En iPhone/iPad: Safari → Compartir → “Añadir a pantalla de inicio”, abre la app y toca la campana.</p>
@@ -158,20 +192,6 @@
       <div class="notif-inbox-divider"></div>
       <div id="notif-inbox-empty" class="notif-inbox-empty">No tienes notificaciones</div>
       <div id="notif-inbox-list" class="notif-inbox-list"></div>
-    </div>
-
-    <div id="pwa-install-banner" class="pwa-install-banner hidden" role="region" aria-label="Instalar app">
-      <div class="pwa-install-banner-inner">
-        <span class="pwa-install-banner-emoji" aria-hidden="true">📲</span>
-        <div class="pwa-install-banner-copy">
-          <p class="pwa-install-banner-title">Instala Ekawent</p>
-          <p id="pwa-banner-desc" class="pwa-install-banner-desc">Acceso rápido desde tu inicio.</p>
-        </div>
-        <div class="pwa-install-banner-actions">
-          <button type="button" id="btn-pwa-banner-install" class="pwa-install-banner-btn">Instalar</button>
-          <button type="button" id="btn-pwa-banner-dismiss" class="pwa-install-banner-close" aria-label="Ocultar aviso">✕</button>
-        </div>
-      </div>
     </div>
 
     <!-- Loading overlay -->
@@ -610,8 +630,8 @@
 
   </div><!-- end #dashboard-shell -->
 
-  <link rel="stylesheet" href="style.css?v=20260527install1" />
+  <link rel="stylesheet" href="style.css?v=20260527install10" />
   <script src="app.js?v=20260527icons4"></script>
-  <script type="module" src="js/main.js?v=20260527install1"></script>
+  <script type="module" src="js/main.js?v=20260527install7"></script>
 </body>
 </html>

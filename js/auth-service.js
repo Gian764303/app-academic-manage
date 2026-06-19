@@ -79,14 +79,118 @@ function isGoogleUser(user) {
   return user.providerData.some((p) => p.providerId === 'google.com');
 }
 
+function setUserAvatar(photoEl, fallbackEl, photoURL, label) {
+  const initial = (label || '?').charAt(0).toUpperCase();
+  if (fallbackEl) fallbackEl.textContent = initial;
+
+  if (!photoEl) {
+    if (fallbackEl) fallbackEl.hidden = false;
+    return;
+  }
+
+  if (!photoURL) {
+    photoEl.hidden = true;
+    photoEl.removeAttribute('src');
+    if (fallbackEl) fallbackEl.hidden = false;
+    return;
+  }
+
+  photoEl.alt = label;
+  photoEl.hidden = true;
+  if (fallbackEl) fallbackEl.hidden = false;
+
+  photoEl.onload = () => {
+    photoEl.hidden = false;
+    if (fallbackEl) fallbackEl.hidden = true;
+  };
+  photoEl.onerror = () => {
+    photoEl.hidden = true;
+    if (fallbackEl) fallbackEl.hidden = false;
+  };
+
+  photoEl.src = photoURL;
+  if (photoEl.complete && photoEl.naturalWidth > 0) {
+    photoEl.hidden = false;
+    if (fallbackEl) fallbackEl.hidden = true;
+  }
+}
+
+function initAccountMenu() {
+  const trigger = document.getElementById('btn-auth-account');
+  const menu = document.getElementById('auth-account-menu');
+  const backdrop = document.getElementById('auth-account-backdrop');
+  if (!trigger || !menu || !backdrop) return;
+
+  function positionMenu() {
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = menu.offsetWidth || 240;
+    const left = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
+    menu.style.top = `${rect.bottom + 8}px`;
+    menu.style.left = `${left}px`;
+  }
+
+  function closeAccountMenu() {
+    menu.classList.add('hidden');
+    backdrop.classList.add('hidden');
+    menu.setAttribute('aria-hidden', 'true');
+    backdrop.setAttribute('aria-hidden', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('auth-account-open');
+  }
+
+  function openAccountMenu() {
+    positionMenu();
+    menu.classList.remove('hidden');
+    backdrop.classList.remove('hidden');
+    menu.setAttribute('aria-hidden', 'false');
+    backdrop.setAttribute('aria-hidden', 'false');
+    trigger.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('auth-account-open');
+  }
+
+  function toggleAccountMenu() {
+    if (menu.classList.contains('hidden')) {
+      openAccountMenu();
+    } else {
+      closeAccountMenu();
+    }
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleAccountMenu();
+  });
+
+  backdrop.addEventListener('click', closeAccountMenu);
+
+  window.addEventListener('resize', () => {
+    if (!menu.classList.contains('hidden')) positionMenu();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
+      closeAccountMenu();
+    }
+  });
+
+  window.closeAccountMenu = closeAccountMenu;
+}
+
 export function initAuthUI() {
   const authScreen = document.getElementById('auth-screen');
   const dashboardShell = document.getElementById('dashboard-shell');
   const authUserBar = document.getElementById('auth-user-bar');
   const authUserEmail = document.getElementById('auth-user-email');
   const authUserPhoto = document.getElementById('auth-user-photo');
+  const authUserPhotoFallback = document.getElementById('auth-user-photo-fallback');
+  const authMenuPhoto = document.getElementById('auth-menu-photo');
+  const authMenuPhotoFallback = document.getElementById('auth-menu-photo-fallback');
+  const authMenuName = document.getElementById('auth-menu-name');
+  const authMenuEmail = document.getElementById('auth-menu-email');
   const authMsg = document.getElementById('auth-message');
   const authModal = document.getElementById('auth-modal');
+
+  initAccountMenu();
 
   window.showAuthToast = (text, type) => setAuthMessage(authMsg, text, type);
 
@@ -126,6 +230,7 @@ export function initAuthUI() {
   });
 
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    window.closeAccountMenu?.();
     const uid = currentUid;
     if (uid) await unregisterActivityPush(uid);
     await logoutUser();
@@ -139,20 +244,27 @@ export function initAuthUI() {
       authScreen?.classList.add('hidden');
       dashboardShell?.classList.remove('hidden');
       authUserBar?.classList.remove('hidden');
-      const label = user.displayName || user.email || 'Usuario';
+      const displayName = user.displayName || '';
+      const email = user.email || '';
+      const label = displayName || email || 'Usuario';
       if (authUserEmail) authUserEmail.textContent = label;
-      if (authUserPhoto) {
-        if (user.photoURL) {
-          authUserPhoto.src = user.photoURL;
-          authUserPhoto.alt = label;
-          authUserPhoto.classList.remove('hidden');
+      if (authMenuName) authMenuName.textContent = label;
+      if (authMenuEmail) {
+        if (displayName && email && displayName !== email) {
+          authMenuEmail.textContent = email;
+          authMenuEmail.classList.remove('hidden');
         } else {
-          authUserPhoto.classList.add('hidden');
+          authMenuEmail.textContent = '';
+          authMenuEmail.classList.add('hidden');
         }
       }
+      setUserAvatar(authUserPhoto, authUserPhotoFallback, user.photoURL, label);
+      setUserAvatar(authMenuPhoto, authMenuPhotoFallback, user.photoURL, label);
       if (typeof window.bootstrapDashboard === 'function') {
         await window.bootstrapDashboard();
       }
+      window.syncPwaBanner?.();
+      window.syncMobileInstallBtn?.();
       await syncPushRegistration(user.uid);
       initNotificationInbox(user.uid);
     } else {
@@ -167,6 +279,7 @@ export function initAuthUI() {
       authScreen?.classList.remove('hidden');
       dashboardShell?.classList.add('hidden');
       authUserBar?.classList.add('hidden');
+      window.closeAccountMenu?.();
       if (user) await signOut(auth);
     }
   });
