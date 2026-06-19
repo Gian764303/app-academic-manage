@@ -258,7 +258,6 @@ export function initAuthUI() {
         await window.bootstrapDashboard();
       }
       window.syncPwaBanner?.();
-      window.syncMobileInstallBtn?.();
       await syncPushRegistration(user.uid);
       initNotificationInbox(user.uid);
     } else {

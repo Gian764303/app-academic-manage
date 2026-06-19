@@ -1,5 +1,6 @@
 const SW_PATH = '/sw.js';
 const NOTIF_ICON = '/icons/icon-192.png';
+const PWA_BANNER_SESSION_DISMISS_KEY = 'pwa-install-banner-dismissed-session';
 
 let deferredInstallPrompt = null;
 
@@ -15,6 +16,14 @@ function isIosDevice() {
 
 function isAndroidDevice() {
   return /Android/i.test(navigator.userAgent);
+}
+
+function isMobileViewport() {
+  return window.matchMedia('(max-width: 767px)').matches;
+}
+
+function isMobileInstallContext() {
+  return isMobileViewport() || isIosDevice() || isAndroidDevice();
 }
 
 function resolveManualPlatform() {
@@ -56,6 +65,15 @@ function setBannerManualSteps(platform) {
   document.getElementById('pwa-banner-manual-generic')?.classList.toggle('hidden', platform !== 'generic');
 }
 
+function isInstallBannerDismissedThisSession() {
+  return sessionStorage.getItem(PWA_BANNER_SESSION_DISMISS_KEY) === '1';
+}
+
+function dismissInstallBannerForSession() {
+  sessionStorage.setItem(PWA_BANNER_SESSION_DISMISS_KEY, '1');
+  closeInstallBanner();
+}
+
 function openInstallBanner(mode) {
   const banner = document.getElementById('pwa-install-banner');
   const titleEl = document.getElementById('pwa-banner-title');
@@ -92,27 +110,20 @@ function closeInstallBanner() {
   document.body.classList.remove('pwa-install-banner-open');
 }
 
-export function syncMobileInstallBtn() {
-  const btn = document.getElementById('btn-mobile-install');
-  if (!btn) return;
+export async function syncPwaInstallBanner() {
+  if (isPwaInstalled()) {
+    closeInstallBanner();
+    return;
+  }
+
   const dashboard = document.getElementById('dashboard-shell');
   const loggedIn = dashboard && !dashboard.classList.contains('hidden');
-  const show = loggedIn && !isPwaInstalled();
-  btn.classList.toggle('hidden', !show);
-}
-
-async function handleInstallHeaderClick() {
-  if (isPwaInstalled()) {
-    window.showAuthToast?.('La app ya está instalada.', 'info');
+  if (!loggedIn || !isMobileInstallContext() || isInstallBannerDismissedThisSession()) {
+    closeInstallBanner();
     return;
   }
 
-  if (deferredInstallPrompt) {
-    openInstallBanner('direct');
-    return;
-  }
-
-  await waitForInstallPrompt(3500);
+  await waitForInstallPrompt(2500);
   openInstallBanner(canInstallPwa() ? 'direct' : 'manual');
 }
 
@@ -159,7 +170,6 @@ export async function promptPwaInstall() {
     const { outcome } = await deferredInstallPrompt.userChoice;
     deferredInstallPrompt = null;
     closeInstallBanner();
-    syncMobileInstallBtn();
     if (outcome === 'accepted') {
       window.showAuthToast?.('Instalada correctamente.', 'success');
     }
@@ -173,31 +183,24 @@ export async function promptPwaInstall() {
 }
 
 export function syncPwaBanner() {
-  syncMobileInstallBtn();
+  void syncPwaInstallBanner();
 }
 
 export function syncPwaInstallUI() {
-  syncMobileInstallBtn();
+  void syncPwaInstallBanner();
 }
 
 function captureInstallPrompt(event) {
   event.preventDefault();
   deferredInstallPrompt = event;
-  syncMobileInstallBtn();
+  void syncPwaInstallBanner();
 }
 
 export async function initPwa() {
   window.addEventListener('appinstalled', () => {
     deferredInstallPrompt = null;
     closeInstallBanner();
-    syncMobileInstallBtn();
     window.showAuthToast?.('Instalada correctamente.', 'success');
-  });
-
-  document.getElementById('btn-mobile-install')?.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    void handleInstallHeaderClick();
   });
 
   document.getElementById('btn-pwa-banner-install')?.addEventListener('click', () => {
@@ -205,7 +208,7 @@ export async function initPwa() {
   });
 
   document.getElementById('btn-pwa-banner-dismiss')?.addEventListener('click', () => {
-    closeInstallBanner();
+    dismissInstallBannerForSession();
   });
 
   if ('serviceWorker' in navigator) {
@@ -223,15 +226,13 @@ export async function initPwa() {
       reg.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
   }
-
-  syncMobileInstallBtn();
 }
 
 window.showPwaNotification = showPwaNotification;
 window.promptPwaInstall = promptPwaInstall;
 window.syncPwaInstallUI = syncPwaInstallUI;
 window.syncPwaBanner = syncPwaBanner;
-window.syncMobileInstallBtn = syncMobileInstallBtn;
+window.syncPwaInstallBanner = syncPwaInstallBanner;
 window.isPwaInstalled = isPwaInstalled;
 
 if (typeof window !== 'undefined') {

@@ -2,7 +2,7 @@ import './firebase-config.js';
 import './push-service.js';
 import './notification-inbox.js?v=20260527notif1';
 import { initAuthUI } from './auth-service.js?v=20260527auth4';
-import { initPwa } from './pwa.js?v=20260527auth4';
+import { initPwa } from './pwa.js?v=20260527pwa1';
 
 initAuthUI();
 initPwa();
