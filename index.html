@@ -2,9 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
-  <link rel="icon" href="/icons/icon-32.png" type="image/png" sizes="32x32" />
-  <link rel="icon" href="/icons/icon-192.png" type="image/png" sizes="192x192" />
+  <link rel="icon" href="/favicon.ico?v=3" sizes="any" />
+  <link rel="icon" href="/icons/icon-32.png?v=3" type="image/png" sizes="32x32" />
+  <link rel="icon" href="/icons/icon-192.png?v=3" type="image/png" sizes="192x192" />
+  <link rel="shortcut icon" href="/icons/icon-32.png?v=3" type="image/png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#111111" />
   <meta name="mobile-web-app-capable" content="yes" />
@@ -12,7 +13,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Ekawent" />
   <link rel="manifest" href="/manifest.webmanifest" />
-  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png?v=3" />
   <title>Ekawent</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -35,17 +36,21 @@
       </div>
     </div>
 
-    <button id="btn-auth-open" type="button" class="auth-login-btn">
-      <span class="auth-login-btn-glow" aria-hidden="true"></span>
-      <span class="auth-login-btn-inner">
-        <svg class="auth-login-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/>
-          <line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        Iniciar sesión
-      </span>
-    </button>
+    <div class="auth-login-topbar">
+      <div class="auth-login-topbar-inner">
+        <button id="btn-auth-open" type="button" class="auth-login-btn">
+          <span class="auth-login-btn-glow" aria-hidden="true"></span>
+          <span class="auth-login-btn-inner">
+            <svg class="auth-login-btn-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            Iniciar sesión
+          </span>
+        </button>
+      </div>
+    </div>
 
     <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <div class="auth-modal-backdrop" id="auth-modal-backdrop"></div>
@@ -620,7 +625,7 @@
 
   </div><!-- end #dashboard-shell -->
 
-  <link rel="stylesheet" href="style.css?v=20260527horario4" />
+  <link rel="stylesheet" href="style.css?v=20260527auth4" />
   <script src="app.js?v=20260527horario2"></script>
   <script type="module" src="js/main.js?v=20260527install18"></script>
 </body>

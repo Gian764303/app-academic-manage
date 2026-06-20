@@ -32,7 +32,7 @@ async function buildIcon(size, { maskable = false } = {}) {
 
 await mkdir(iconsDir, { recursive: true });
 
-for (const size of [32, 192, 512]) {
+for (const size of [16, 32, 192, 512]) {
   const pngPath = join(iconsDir, `icon-${size}.png`);
   await sharp(await buildIcon(size)).toFile(pngPath);
   console.log('Wrote', pngPath);
@@ -41,3 +41,7 @@ for (const size of [32, 192, 512]) {
 const maskable512 = await buildIcon(512, { maskable: true });
 await sharp(maskable512).toFile(join(iconsDir, 'icon-512-maskable.png'));
 console.log('Wrote', join(iconsDir, 'icon-512-maskable.png'));
+
+const favicon32 = await buildIcon(32);
+await sharp(favicon32).toFile(join(root, 'favicon.ico'));
+console.log('Wrote', join(root, 'favicon.ico'));
